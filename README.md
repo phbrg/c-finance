@@ -1,5 +1,6 @@
 # c-finance
-> Feito com AI
+> Feito com AI.
+
 Aplicação client-side para organizar finanças pessoais. Os dados são validados e armazenados exclusivamente no `localStorage` do navegador; não há backend, login, analytics ou chamadas HTTP.
 
 ## Executar
