@@ -39,6 +39,7 @@ export const financialItemSchema = z
 
 export const financeDataSchema = z.object({
   version: z.literal(2),
+  welcomeCompleted: z.boolean().default(false),
   items: z.array(financialItemSchema).max(100_000),
   occurrenceRecords: z
     .array(

@@ -12,7 +12,7 @@ const LEGACY_TRANSACTION_KEYS = [
 const transactionListSchema = z.array(transactionSchema)
 
 export function emptyFinanceData(): FinanceData {
-  return { version: 2, items: [], occurrenceRecords: [], investments: [] }
+  return { version: 2, welcomeCompleted: false, items: [], occurrenceRecords: [], investments: [] }
 }
 
 function storage(): Storage {
@@ -71,5 +71,5 @@ export function migrateTransactions(transactions: Transaction[]): FinanceData {
     status: 'completed',
     completedAt: `${transaction.paymentDate}T12:00:00.000Z`,
   }))
-  return { version: 2, items, occurrenceRecords, investments: [] }
+  return { version: 2, welcomeCompleted: true, items, occurrenceRecords, investments: [] }
 }

@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { PlanningPage } from './pages/PlanningPage'
 import { TransactionsPage } from './pages/TransactionsPage'
 import { InvestmentsPage } from './pages/InvestmentsPage'
+import { WelcomePage } from './pages/WelcomePage'
 import type { AppPage } from './types/finance'
 import { currentMonth, today } from './utils/date'
 import { daysInMonth } from './utils/recurrence'
@@ -16,7 +17,9 @@ function cutoffForMonth(month: string): string {
 
 function App() {
   const finance = useFinance()
-  const [page, setPage] = useState<AppPage>(() => finance.items.length > 0 ? 'dashboard' : 'planning')
+  const [page, setPage] = useState<AppPage>(() =>
+    finance.items.length > 0 || finance.investments.length > 0 ? 'dashboard' : 'planning',
+  )
   const [month, setMonth] = useState(currentMonth())
   const [cutoffDate, setCutoffDate] = useState(today())
   const occurrences = useMemo(() => finance.occurrencesForMonth(month), [finance, month])
@@ -30,6 +33,26 @@ function App() {
   const changeMonth = (nextMonth: string) => {
     setMonth(nextMonth)
     setCutoffDate(cutoffForMonth(nextMonth))
+  }
+
+  const hasExistingData =
+    finance.items.length > 0 ||
+    finance.investments.length > 0 ||
+    finance.data.occurrenceRecords.length > 0
+  const showWelcome = !finance.data.welcomeCompleted && !hasExistingData
+
+  if (showWelcome) {
+    return (
+      <WelcomePage
+        error={finance.error}
+        onStart={() => {
+          if (finance.completeWelcome()) setPage('planning')
+        }}
+        onImport={finance.importBackup}
+        onImported={() => setPage('dashboard')}
+        onClearError={finance.clearFeedback}
+      />
+    )
   }
 
   const pageContent = {

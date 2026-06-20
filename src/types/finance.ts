@@ -52,6 +52,7 @@ export interface OpeningBalance {
 
 export interface FinanceData {
   version: 2
+  welcomeCompleted: boolean
   items: FinancialItem[]
   occurrenceRecords: OccurrenceRecord[]
   investments: Investment[]

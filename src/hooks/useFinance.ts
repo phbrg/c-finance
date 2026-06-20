@@ -185,6 +185,9 @@ export function useFinance() {
     )
   }
 
+  const completeWelcome = (): boolean =>
+    commit({ ...state.data, welcomeCompleted: true }, 'Bem-vindo ao c-finance.')
+
   const setOccurrenceStatus = (key: string, status: OccurrenceStatus): void => {
     const record = {
       key,
@@ -202,7 +205,10 @@ export function useFinance() {
 
   const importBackup = (content: string): boolean => {
     try {
-      return commit(parseFinanceBackup(content), 'Backup importado com sucesso.')
+      return commit(
+        { ...parseFinanceBackup(content), welcomeCompleted: true },
+        'Backup importado com sucesso.',
+      )
     } catch (error: unknown) {
       setState((current) => ({ ...current, error: error instanceof Error ? error.message : 'Backup inválido.' }))
       return false
@@ -221,6 +227,7 @@ export function useFinance() {
     addInvestment,
     updateInvestment,
     deleteInvestment,
+    completeWelcome,
     setOccurrenceStatus,
     importBackup,
     occurrencesForMonth: (month: string) =>

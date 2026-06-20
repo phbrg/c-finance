@@ -41,6 +41,8 @@ describe('finance storage v2', () => {
       items: [],
       occurrenceRecords: [],
     }))
-    expect(loadFinanceData().investments).toEqual([])
+    const loaded = loadFinanceData()
+    expect(loaded.investments).toEqual([])
+    expect(loaded.welcomeCompleted).toBe(false)
   })
 })
