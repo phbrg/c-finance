@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FinancialItem, FinancialItemDraft, FinanceData } from '../types/finance'
 import { DashboardHeader } from '../components/layout/DashboardHeader'
 import { FinancialItemForm } from '../components/planning/FinancialItemForm'
+import { PlanningOverview } from '../components/planning/PlanningOverview'
 import { PlannedItemsList } from '../components/planning/PlannedItemsList'
 
 interface PlanningPageProps {
@@ -30,7 +31,7 @@ export function PlanningPage({ data, onAdd, onUpdate, onDelete, onImport }: Plan
   }
 
   return (
-    <>
+    <div className="planning-page">
       <DashboardHeader title="Planejamento" description="Construa sua base mensal de ganhos e compromissos." data={data} onImport={onImport} />
       {data.items.length === 0 && (
         <section className="welcome-banner">
@@ -39,12 +40,13 @@ export function PlanningPage({ data, onAdd, onUpdate, onDelete, onImport }: Plan
           <p>Cadastre ao menos um ganho e seus principais gastos fixos. Depois, acompanhe tudo pela dashboard.</p>
         </section>
       )}
+      {data.items.length > 0 && <PlanningOverview items={data.items} />}
       <div className="planning-layout">
         <FinancialItemForm key={editingItem?.id ?? 'new-item'} onSubmit={submitItem} editingItem={editingItem} investments={data.investments} onCancel={() => setEditingItem(null)} />
         <div className="planning-side">
           <PlannedItemsList items={data.items} onEdit={editItem} onDelete={onDelete} />
         </div>
       </div>
-    </>
+    </div>
   )
 }

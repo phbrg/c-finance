@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { FinancialOccurrence } from '../types/finance'
-import { calculateDashboardSummary, categoryTotals } from '../utils/projections'
+import { calculateDashboardSummary, categoryTotals, dailyCashFlow } from '../utils/projections'
 
 function occurrence(overrides: Partial<FinancialOccurrence>): FinancialOccurrence {
   return {
@@ -46,5 +46,17 @@ describe('dashboard projections', () => {
       occurrence({ key: 'two', category: 'Home', amount: 50 }),
       occurrence({ key: 'three', category: 'Food', amount: 70 }),
     ])).toEqual([{ category: 'Home', amount: 150 }, { category: 'Food', amount: 70 }])
+  })
+
+  it('groups daily cash flow chronologically and ignores skipped items', () => {
+    expect(dailyCashFlow([
+      occurrence({ key: 'late', dueDate: '2026-06-20', amount: 50 }),
+      occurrence({ key: 'salary', dueDate: '2026-06-05', type: 'income', amount: 300 }),
+      occurrence({ key: 'same-day', dueDate: '2026-06-05', amount: 80 }),
+      occurrence({ key: 'skipped', dueDate: '2026-06-10', amount: 1_000, status: 'skipped' }),
+    ])).toEqual([
+      { day: 5, change: 220, balance: 220 },
+      { day: 20, change: -50, balance: 170 },
+    ])
   })
 })

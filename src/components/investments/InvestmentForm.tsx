@@ -51,9 +51,10 @@ export function InvestmentForm({ editingInvestment, onSubmit, onCancel }: Invest
   return (
     <form id="investment-form" className={`workspace-card investment-form ${editingInvestment ? 'editing' : ''}`} onSubmit={submit} noValidate>
       <div className="card-heading">
-        <div><span className="overline">{editingInvestment ? 'Editando aplicação' : 'Nova aplicação'}</span><h2>{editingInvestment?.name ?? 'Adicionar investimento'}</h2></div>
+        <div><span className="overline">{editingInvestment ? 'Editando aplicação' : 'Nova aplicação'}</span><h2>{editingInvestment?.name ?? 'Adicionar investimento'}</h2><p>{editingInvestment ? 'Atualize saldo, taxa ou aporte para recalcular toda a carteira.' : 'Registre reservas, caixinhas e aplicações de renda previsível.'}</p></div>
         {editingInvestment && <span className="editing-badge">Modo edição</span>}
       </div>
+      <div className="investment-form-note"><span aria-hidden="true">i</span><p>O saldo pode começar em zero. A taxa anual e o aporte mensal serão usados apenas nas simulações.</p></div>
       <div className="form-grid">
         <label className="field wide"><span>Nome</span><input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Reserva de emergência" /></label>
         <label className="field wide"><span>Instituição ou local</span><input value={form.institution} onChange={(event) => setForm({ ...form, institution: event.target.value })} placeholder="Ex.: Caixinha Nubank" /></label>

@@ -50,14 +50,21 @@ export function categoryTotals(occurrences: FinancialOccurrence[]): Array<{ cate
     .sort((first, second) => second.amount - first.amount)
 }
 
-export function dailyCashFlow(occurrences: FinancialOccurrence[]): Array<{ day: number; balance: number }> {
-  if (occurrences.length === 0) return []
+export function dailyCashFlow(occurrences: FinancialOccurrence[]): Array<{ day: number; balance: number; change: number }> {
+  const changesByDay = new Map<number, number>()
+  for (const item of occurrences) {
+    if (item.status === 'skipped') continue
+    const day = Number(item.dueDate.slice(8, 10))
+    const change = item.type === 'income' ? item.amount : -item.amount
+    changesByDay.set(day, (changesByDay.get(day) ?? 0) + change)
+  }
+
   let balance = 0
-  return occurrences
-    .filter((item) => item.status !== 'skipped')
-    .map((item) => {
-      balance += item.type === 'income' ? item.amount : -item.amount
-      return { day: Number(item.dueDate.slice(8, 10)), balance }
+  return [...changesByDay.entries()]
+    .sort(([firstDay], [secondDay]) => firstDay - secondDay)
+    .map(([day, change]) => {
+      balance += change
+      return { day, balance, change }
     })
 }
 

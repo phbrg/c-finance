@@ -3,9 +3,11 @@ import { DashboardHeader } from '../components/layout/DashboardHeader'
 import { InvestmentForm } from '../components/investments/InvestmentForm'
 import { InvestmentList } from '../components/investments/InvestmentList'
 import { InvestmentProjectionChart } from '../components/investments/InvestmentProjectionChart'
+import { PortfolioAllocation } from '../components/investments/PortfolioAllocation'
 import type { FinanceData, Investment, InvestmentDraft } from '../types/finance'
 import { formatCurrency } from '../utils/currency'
 import { projectPortfolio } from '../utils/investmentProjections'
+import { summarizePortfolio } from '../utils/portfolio'
 
 interface InvestmentsPageProps {
   data: FinanceData
@@ -18,9 +20,8 @@ interface InvestmentsPageProps {
 export function InvestmentsPage({ data, onAdd, onUpdate, onDelete, onImport }: InvestmentsPageProps) {
   const [editingInvestment, setEditingInvestment] = useState<Investment | null>(null)
   const [horizon, setHorizon] = useState(5)
-  const oneYear = projectPortfolio(data.investments, 12)
-  const totalBalance = data.investments.reduce((sum, item) => sum + item.currentBalance, 0)
-  const monthlyContribution = data.investments.reduce((sum, item) => sum + item.monthlyContribution, 0)
+  const summary = summarizePortfolio(data.investments)
+  const projection = projectPortfolio(data.investments, horizon * 12)
 
   const submit = (draft: InvestmentDraft): boolean => {
     if (!editingInvestment) return onAdd(draft)
@@ -35,19 +36,28 @@ export function InvestmentsPage({ data, onAdd, onUpdate, onDelete, onImport }: I
   }
 
   return (
-    <>
+    <div className="investments-page">
       <DashboardHeader title="Investimentos" description="Acompanhe reservas, caixinhas e a evolução estimada dos seus aportes." data={data} onImport={onImport} />
+
       <section className="investment-summary" aria-label="Resumo dos investimentos">
-        <article><span>Patrimônio investido</span><strong>{formatCurrency(totalBalance)}</strong><small>Saldo informado hoje</small></article>
-        <article><span>Aportes mensais</span><strong>{formatCurrency(monthlyContribution)}</strong><small>{data.investments.filter((item) => item.linkedFinancialItemId).length} vinculados ao planejamento</small></article>
-        <article><span>Projeção em 1 ano</span><strong>{formatCurrency(oneYear.balance)}</strong><small>{formatCurrency(oneYear.earnings)} em rendimento estimado</small></article>
+        <article className="balance"><span>Patrimônio investido</span><strong>{formatCurrency(summary.totalBalance)}</strong><small>saldo atual informado em {data.investments.length} {data.investments.length === 1 ? 'aplicação' : 'aplicações'}</small></article>
+        <article className="contribution"><span>Aportes mensais</span><strong>{formatCurrency(summary.monthlyContribution)}</strong><small>{summary.linkedCount} {summary.linkedCount === 1 ? 'aporte vinculado' : 'aportes vinculados'} ao planejamento</small></article>
+        <article className="projected"><span>Projeção em {horizon} {horizon === 1 ? 'ano' : 'anos'}</span><strong>{formatCurrency(projection.balance)}</strong><small>mantendo taxas e aportes informados</small></article>
+        <article className="earnings"><span>Rendimento estimado</span><strong>{formatCurrency(projection.earnings)}</strong><small>taxa média de {(summary.weightedAnnualRateBps / 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}% ao ano</small></article>
       </section>
-      <div className="investment-toolbar"><label className="field"><span>Horizonte da projeção</span><select value={horizon} onChange={(event) => setHorizon(Number(event.target.value))}><option value="1">1 ano</option><option value="3">3 anos</option><option value="5">5 anos</option><option value="10">10 anos</option><option value="20">20 anos</option></select></label></div>
-      <InvestmentProjectionChart investments={data.investments} years={horizon} />
+
+      <div className="investment-analytics-grid">
+        <InvestmentProjectionChart investments={data.investments} years={horizon} onYearsChange={setHorizon} />
+        <PortfolioAllocation investments={data.investments} />
+      </div>
+
       <div className="investments-layout">
         <InvestmentForm key={editingInvestment?.id ?? 'new-investment'} editingInvestment={editingInvestment} onSubmit={submit} onCancel={() => setEditingInvestment(null)} />
-        <section className="workspace-card investments-list-card"><div className="card-heading"><div><span className="overline">Carteira</span><h2>Seus investimentos</h2></div><span className="count-badge">{data.investments.length}</span></div><InvestmentList investments={data.investments} onEdit={edit} onDelete={onDelete} /></section>
+        <section className="workspace-card investments-list-card">
+          <div className="card-heading investments-list-heading"><div><span className="overline">Carteira</span><h2>Seus investimentos</h2><p>Consulte saldos, aportes, taxas e projeções individuais.</p></div><span className="count-badge">{data.investments.length}</span></div>
+          <InvestmentList investments={data.investments} onEdit={edit} onDelete={onDelete} />
+        </section>
       </div>
-    </>
+    </div>
   )
 }

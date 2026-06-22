@@ -67,16 +67,16 @@ export function FinancialItemForm({ onSubmit, editingItem, investments = [], onC
   return (
     <form id="financial-item-form" className={`workspace-card item-form ${editingItem ? 'editing' : ''}`} onSubmit={submit} noValidate>
       <div className="card-heading">
-        <div><span className="overline">{editingItem ? 'Editando item' : 'Novo item'}</span><h2>{editingItem ? editingItem.title : 'Adicionar ao planejamento'}</h2></div>
+        <div><span className="overline">{editingItem ? 'Editando item' : 'Novo item'}</span><h2>{editingItem ? editingItem.title : 'Adicionar ao planejamento'}</h2><p>{editingItem ? 'Revise os dados e salve para atualizar suas projeções.' : 'Cadastre algo que entra ou sai do seu orçamento.'}</p></div>
         {editingItem && <span className="editing-badge">Modo edição</span>}
       </div>
       <div className="type-toggle" role="group" aria-label="Tipo financeiro">
-        <button type="button" className={form.type === 'income' ? 'active income' : ''} aria-pressed={form.type === 'income'} onClick={() => setForm({ ...form, type: 'income', investmentId: '' })}>Ganho</button>
-        <button type="button" className={form.type === 'expense' ? 'active expense' : ''} aria-pressed={form.type === 'expense'} onClick={() => setForm({ ...form, type: 'expense' })}>Gasto</button>
+        <button type="button" className={`income ${form.type === 'income' ? 'active' : ''}`} aria-label="Ganho" aria-pressed={form.type === 'income'} onClick={() => setForm({ ...form, type: 'income', investmentId: '' })}><span aria-hidden="true">＋</span><div><strong>Ganho</strong><small>Dinheiro que entra</small></div></button>
+        <button type="button" className={`expense ${form.type === 'expense' ? 'active' : ''}`} aria-label="Gasto" aria-pressed={form.type === 'expense'} onClick={() => setForm({ ...form, type: 'expense' })}><span aria-hidden="true">−</span><div><strong>Gasto</strong><small>Dinheiro que sai</small></div></button>
       </div>
       <div className="kind-picker" role="group" aria-label="Frequência">
-        <button type="button" className={form.kind === 'recurring' ? 'active' : ''} aria-pressed={form.kind === 'recurring'} onClick={() => setForm({ ...form, kind: 'recurring' })}><strong>Fixo mensal</strong><small>Repete todos os meses</small></button>
-        <button type="button" className={form.kind === 'one-time' ? 'active' : ''} aria-pressed={form.kind === 'one-time'} onClick={() => setForm({ ...form, kind: 'one-time' })}><strong>Único</strong><small>Acontece apenas uma vez</small></button>
+        <button type="button" className={form.kind === 'recurring' ? 'active' : ''} aria-label="Fixo mensal" aria-pressed={form.kind === 'recurring'} onClick={() => setForm({ ...form, kind: 'recurring' })}><span aria-hidden="true">↻</span><div><strong>Fixo mensal</strong><small>Repete todos os meses</small></div></button>
+        <button type="button" className={form.kind === 'one-time' ? 'active' : ''} aria-label="Único" aria-pressed={form.kind === 'one-time'} onClick={() => setForm({ ...form, kind: 'one-time' })}><span aria-hidden="true">1×</span><div><strong>Único</strong><small>Acontece apenas uma vez</small></div></button>
       </div>
       <div className="form-grid">
         <label className="field wide"><span>Título</span><input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder={form.type === 'income' ? 'Ex.: Salário' : 'Ex.: Aluguel'} /></label>
