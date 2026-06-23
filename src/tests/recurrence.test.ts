@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { FinancialItem } from '../types/finance'
-import { generateOccurrences, occurrenceDate } from '../utils/recurrence'
+import { generateOccurrences, monthEndDate, occurrenceDate } from '../utils/recurrence'
 
 const recurringItem: FinancialItem = {
   id: 'rent',
@@ -20,14 +20,23 @@ describe('recurrence', () => {
     expect(occurrenceDate('2024-02', 31)).toBe('2024-02-29')
   })
 
+  it('returns the final day used by the dashboard monthly overview', () => {
+    expect(monthEndDate('2026-06')).toBe('2026-06-30')
+    expect(monthEndDate('2024-02')).toBe('2024-02-29')
+  })
+
   it('generates monthly occurrences and applies saved status', () => {
     const occurrences = generateOccurrences(
       [recurringItem],
-      [{ key: 'rent:2026-02-28', status: 'completed', completedAt: '2026-02-28T12:00:00.000Z' }],
+      [{ key: 'rent:2026-02-28', status: 'completed', confirmedAt: '2026-03-01T12:00:00.000Z' }],
       '2026-02',
     )
     expect(occurrences).toHaveLength(1)
-    expect(occurrences[0]).toMatchObject({ dueDate: '2026-02-28', status: 'completed' })
+    expect(occurrences[0]).toMatchObject({
+      dueDate: '2026-02-28',
+      status: 'completed',
+      confirmedAt: '2026-03-01T12:00:00.000Z',
+    })
   })
 
   it('respects start, end and active state', () => {

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { financialItemDraftSchema } from '../../schemas/financeSchema'
 import type { FinancialItem, FinancialItemDraft, FinancialItemKind, Investment } from '../../types/finance'
-import type { TransactionType } from '../../types/transaction'
+import type { TransactionType } from '../../types/common'
 import { parseCurrencyToCents } from '../../utils/currency'
 import { currentMonth, today } from '../../utils/date'
 

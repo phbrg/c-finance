@@ -1,5 +1,6 @@
 import type { FinancialItem, FinancialItemKind } from '../types/finance'
-import type { TransactionType } from '../types/transaction'
+import type { TransactionType } from '../types/common'
+import { normalizeSearchText } from './text'
 
 export type PlannedItemScope = 'current' | 'ended'
 
@@ -29,7 +30,7 @@ export function filterPlannedItems(
   filters: PlannedItemFilters,
   referenceDate: string,
 ): FinancialItem[] {
-  const normalizedQuery = normalize(filters.query)
+  const normalizedQuery = normalizeSearchText(filters.query)
 
   return items
     .filter((item) => {
@@ -38,7 +39,7 @@ export function filterPlannedItems(
       if (filters.type !== 'all' && item.type !== filters.type) return false
       if (filters.kind !== 'all' && item.kind !== filters.kind) return false
       if (!normalizedQuery) return true
-      return normalize(`${item.title} ${item.category}`).includes(normalizedQuery)
+      return normalizeSearchText(`${item.title} ${item.category}`).includes(normalizedQuery)
     })
     .sort(comparePlannedItems)
 }
@@ -73,9 +74,6 @@ function comparePlannedItems(first: FinancialItem, second: FinancialItem): numbe
   return firstDate.localeCompare(secondDate) || first.title.localeCompare(second.title, 'pt-BR')
 }
 
-function normalize(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('pt-BR')
-}
 
 function sum(items: FinancialItem[]): number {
   return items.reduce((total, item) => total + item.amount, 0)

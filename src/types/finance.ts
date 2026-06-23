@@ -1,4 +1,4 @@
-import type { TransactionType } from './transaction'
+import type { TransactionType } from './common'
 
 export type FinancialItemKind = 'recurring' | 'one-time'
 export type OccurrenceStatus = 'planned' | 'completed' | 'skipped'
@@ -42,21 +42,15 @@ export interface FinancialItemDraft {
 export interface OccurrenceRecord {
   key: string
   status: OccurrenceStatus
-  completedAt?: string
-}
-
-export interface OpeningBalance {
-  amount: number
-  date: string
+  confirmedAt?: string
 }
 
 export interface FinanceData {
-  version: 2
+  version: 3
   welcomeCompleted: boolean
   items: FinancialItem[]
   occurrenceRecords: OccurrenceRecord[]
   investments: Investment[]
-  openingBalance?: OpeningBalance
 }
 
 export interface FinancialOccurrence {
@@ -69,7 +63,7 @@ export interface FinancialOccurrence {
   category: string
   dueDate: string
   status: OccurrenceStatus
-  completedAt?: string
+  confirmedAt?: string
   investmentId?: string
 }
 

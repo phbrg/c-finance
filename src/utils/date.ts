@@ -13,16 +13,6 @@ export function today(): string {
   return `${year}-${month}-${day}`
 }
 
-export function addMonths(dateString: string, months: number): string {
-  const [year, month, day] = dateString.split('-').map(Number)
-  const lastDay = new Date(year, month + months, 0).getDate()
-  const result = new Date(year, month - 1 + months, Math.min(day, lastDay))
-  const resultYear = result.getFullYear()
-  const resultMonth = String(result.getMonth() + 1).padStart(2, '0')
-  const resultDay = String(result.getDate()).padStart(2, '0')
-  return `${resultYear}-${resultMonth}-${resultDay}`
-}
-
 export function formatDate(dateString: string): string {
   const [year, month, day] = dateString.split('-')
   return `${day}/${month}/${year}`

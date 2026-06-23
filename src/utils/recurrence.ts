@@ -13,19 +13,14 @@ export function occurrenceDate(month: string, dayOfMonth: number): string {
   return `${month}-${String(Math.min(dayOfMonth, daysInMonth(month))).padStart(2, '0')}`
 }
 
+export function monthEndDate(month: string): string {
+  return `${month}-${String(daysInMonth(month)).padStart(2, '0')}`
+}
+
 export function addMonth(month: string, offset: number): string {
   const [year, monthNumber] = month.split('-').map(Number)
   const result = new Date(year, monthNumber - 1 + offset, 1)
   return `${result.getFullYear()}-${String(result.getMonth() + 1).padStart(2, '0')}`
-}
-
-export function monthRange(startMonth: string, endMonth: string): string[] {
-  const months: string[] = []
-  for (let month = startMonth; month <= endMonth; month = addMonth(month, 1)) {
-    months.push(month)
-    if (months.length > 1_200) break
-  }
-  return months
 }
 
 export function generateOccurrences(
@@ -60,7 +55,7 @@ export function generateOccurrences(
         category: item.category,
         dueDate,
         status: record?.status ?? 'planned',
-        ...(record?.completedAt ? { completedAt: record.completedAt } : {}),
+        ...(record?.confirmedAt ? { confirmedAt: record.confirmedAt } : {}),
         ...(item.investmentId ? { investmentId: item.investmentId } : {}),
       }]
     })

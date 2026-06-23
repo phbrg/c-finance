@@ -20,8 +20,8 @@ function occurrence(overrides: Partial<FinancialOccurrence>): FinancialOccurrenc
 describe('dashboard projections', () => {
   it('separates expected, completed and pending values', () => {
     const summary = calculateDashboardSummary([
-      occurrence({ key: 'salary:2026-06-05', type: 'income', amount: 300_000, status: 'completed', completedAt: '2026-06-05T12:00:00.000Z' }),
-      occurrence({ key: 'rent:2026-06-10', dueDate: '2026-06-10', amount: 100_000, status: 'completed', completedAt: '2026-06-10T12:00:00.000Z' }),
+      occurrence({ key: 'salary:2026-06-05', type: 'income', amount: 300_000, status: 'completed', confirmedAt: '2026-06-18T12:00:00.000Z' }),
+      occurrence({ key: 'rent:2026-06-10', dueDate: '2026-06-10', amount: 100_000, status: 'completed', confirmedAt: '2026-06-18T12:00:00.000Z' }),
       occurrence({ key: 'card:2026-06-20', dueDate: '2026-06-20', amount: 50_000 }),
     ], '2026-06-15')
 

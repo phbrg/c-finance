@@ -1,0 +1,7 @@
+.dialog-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.72); padding: 16px; backdrop-filter: blur(3px); }
+.dialog-panel { width: 100%; max-width: 430px; border: 1px solid #374355; border-radius: 15px; background: #151b24; padding: 24px; box-shadow: 0 24px 80px rgba(0,0,0,.5); }
+.dialog-icon { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; margin-bottom: 20px; border-radius: 50%; background: #4c1524; color: #fb7185; font-size: 20px; }
+.dialog-title { margin: 0; color: #f1f5f9; font-size: 20px; font-weight: 700; }
+.dialog-description { margin: 8px 0 0; color: #94a3b8; font-size: 14px; line-height: 1.5; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.backup-error { margin: 8px 0 0; color: #fda4af; font-size: 12px; }

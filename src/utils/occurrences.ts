@@ -1,5 +1,6 @@
 import type { FinancialOccurrence, OccurrenceStatus } from '../types/finance'
-import type { TransactionType } from '../types/transaction'
+import type { TransactionType } from '../types/common'
+import { normalizeSearchText } from './text'
 
 export type OccurrenceSort = 'date' | 'pending-first' | 'amount'
 
@@ -51,13 +52,13 @@ export function filterOccurrences(
   occurrences: FinancialOccurrence[],
   filters: OccurrenceFilters,
 ): FinancialOccurrence[] {
-  const query = normalize(filters.query)
+  const query = normalizeSearchText(filters.query)
   return occurrences
     .filter((item) => (
       (filters.type === 'all' || item.type === filters.type) &&
       (filters.status === 'all' || item.status === filters.status) &&
       (filters.category === 'all' || item.category === filters.category) &&
-      (!query || normalize(`${item.title} ${item.category}`).includes(query))
+      (!query || normalizeSearchText(`${item.title} ${item.category}`).includes(query))
     ))
     .sort((first, second) => compareOccurrences(first, second, filters.sort))
 }
@@ -69,10 +70,6 @@ function compareOccurrences(first: FinancialOccurrence, second: FinancialOccurre
     return priority[first.status] - priority[second.status] || first.dueDate.localeCompare(second.dueDate)
   }
   return first.dueDate.localeCompare(second.dueDate)
-}
-
-function normalize(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('pt-BR')
 }
 
 function sum(occurrences: FinancialOccurrence[]): number {

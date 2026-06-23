@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type { Transaction } from '../types/transaction'
+import type { LegacyTransaction } from '../schemas/legacyTransactionSchema'
 import { FINANCE_STORAGE_KEY, loadFinanceData, migrateTransactions, saveFinanceData } from '../services/financeStorage'
 
-const oldTransaction: Transaction = {
+const oldTransaction: LegacyTransaction = {
   id: 'old-1',
   title: 'Old salary',
   type: 'income',
@@ -13,14 +13,14 @@ const oldTransaction: Transaction = {
   updatedAt: '2026-06-01T12:00:00.000Z',
 }
 
-describe('finance storage v2', () => {
+describe('finance storage', () => {
   it('migrates old transactions into completed one-time items', () => {
     const data = migrateTransactions([oldTransaction])
     expect(data.items[0]).toMatchObject({ kind: 'one-time', dueDate: '2026-06-05' })
     expect(data.occurrenceRecords[0]).toMatchObject({ status: 'completed' })
   })
 
-  it('loads a legacy key and removes it after saving v2', () => {
+  it('loads a legacy key and removes it after saving the current format', () => {
     const legacyKey = 'c-finance:transactions:v1'
     window.localStorage.setItem(legacyKey, JSON.stringify([oldTransaction]))
     const data = loadFinanceData()
@@ -30,7 +30,7 @@ describe('finance storage v2', () => {
     expect(window.localStorage.getItem(legacyKey)).toBeNull()
   })
 
-  it('reports corrupted v2 data', () => {
+  it('reports corrupted data', () => {
     window.localStorage.setItem(FINANCE_STORAGE_KEY, '{broken')
     expect(() => loadFinanceData()).toThrow('corrompidos')
   })

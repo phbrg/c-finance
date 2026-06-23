@@ -1,4 +1,5 @@
 import type { Investment } from '../types/finance'
+import { normalizeSearchText } from './text'
 
 export type InvestmentSort = 'balance' | 'contribution' | 'rate' | 'name'
 
@@ -23,7 +24,7 @@ export function summarizePortfolio(investments: Investment[]): PortfolioSummary 
     monthlyContribution: investments.reduce((sum, item) => sum + item.monthlyContribution, 0),
     weightedAnnualRateBps: totalBalance > 0 ? Math.round(weightedRate / totalBalance) : 0,
     linkedCount: investments.filter((item) => item.linkedFinancialItemId).length,
-    institutionCount: new Set(investments.map((item) => normalize(item.institution))).size,
+    institutionCount: new Set(investments.map((item) => normalizeSearchText(item.institution))).size,
   }
 }
 
@@ -43,11 +44,11 @@ export function filterInvestments(
   institution: string,
   sort: InvestmentSort,
 ): Investment[] {
-  const normalizedQuery = normalize(query)
+  const normalizedQuery = normalizeSearchText(query)
   return investments
     .filter((investment) => (
       (institution === 'all' || investment.institution === institution) &&
-      (!normalizedQuery || normalize(`${investment.name} ${investment.institution}`).includes(normalizedQuery))
+      (!normalizedQuery || normalizeSearchText(`${investment.name} ${investment.institution}`).includes(normalizedQuery))
     ))
     .sort((first, second) => compareInvestments(first, second, sort))
 }
@@ -57,8 +58,4 @@ function compareInvestments(first: Investment, second: Investment, sort: Investm
   if (sort === 'rate') return second.annualRateBps - first.annualRateBps || second.currentBalance - first.currentBalance
   if (sort === 'name') return first.name.localeCompare(second.name, 'pt-BR')
   return second.currentBalance - first.currentBalance
-}
-
-function normalize(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('pt-BR')
 }

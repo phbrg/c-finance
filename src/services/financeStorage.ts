@@ -1,18 +1,17 @@
 import { z } from 'zod'
-import { financeDataSchema } from '../schemas/financeSchema'
-import { transactionSchema } from '../schemas/transactionSchema'
+import { financeDataSchema, parseFinanceData } from '../schemas/financeSchema'
+import { legacyTransactionListSchema } from '../schemas/legacyTransactionSchema'
 import type { FinanceData, FinancialItem, OccurrenceRecord } from '../types/finance'
-import type { Transaction } from '../types/transaction'
+import type { LegacyTransaction } from '../schemas/legacyTransactionSchema'
 
 export const FINANCE_STORAGE_KEY = 'c-finance:data:v2'
 const LEGACY_TRANSACTION_KEYS = [
   'c-finance:transactions:v1',
   'financeiro-local:transactions:v1',
 ]
-const transactionListSchema = z.array(transactionSchema)
 
 export function emptyFinanceData(): FinanceData {
-  return { version: 2, welcomeCompleted: false, items: [], occurrenceRecords: [], investments: [] }
+  return { version: 3, welcomeCompleted: false, items: [], occurrenceRecords: [], investments: [] }
 }
 
 function storage(): Storage {
@@ -25,11 +24,11 @@ function storage(): Storage {
 export function loadFinanceData(): FinanceData {
   try {
     const current = storage().getItem(FINANCE_STORAGE_KEY)
-    if (current) return financeDataSchema.parse(JSON.parse(current))
+    if (current) return parseFinanceData(JSON.parse(current))
 
     for (const key of LEGACY_TRANSACTION_KEYS) {
       const legacy = storage().getItem(key)
-      if (legacy) return migrateTransactions(transactionListSchema.parse(JSON.parse(legacy)))
+      if (legacy) return migrateTransactions(legacyTransactionListSchema.parse(JSON.parse(legacy)))
     }
     return emptyFinanceData()
   } catch (error: unknown) {
@@ -53,7 +52,7 @@ export function saveFinanceData(data: FinanceData): void {
   }
 }
 
-export function migrateTransactions(transactions: Transaction[]): FinanceData {
+export function migrateTransactions(transactions: LegacyTransaction[]): FinanceData {
   const items: FinancialItem[] = transactions.map((transaction) => ({
     id: transaction.id,
     title: transaction.title,
@@ -69,7 +68,6 @@ export function migrateTransactions(transactions: Transaction[]): FinanceData {
   const occurrenceRecords: OccurrenceRecord[] = transactions.map((transaction) => ({
     key: `${transaction.id}:${transaction.paymentDate}`,
     status: 'completed',
-    completedAt: `${transaction.paymentDate}T12:00:00.000Z`,
   }))
-  return { version: 2, welcomeCompleted: true, items, occurrenceRecords, investments: [] }
+  return { version: 3, welcomeCompleted: true, items, occurrenceRecords, investments: [] }
 }

@@ -7,21 +7,17 @@ import { TransactionsPage } from './pages/TransactionsPage'
 import { InvestmentsPage } from './pages/InvestmentsPage'
 import { WelcomePage } from './pages/WelcomePage'
 import type { AppPage } from './types/finance'
-import { currentMonth, today } from './utils/date'
-import { daysInMonth } from './utils/recurrence'
-
-function cutoffForMonth(month: string): string {
-  if (month === currentMonth()) return today()
-  return `${month}-${String(daysInMonth(month)).padStart(2, '0')}`
-}
+import { currentMonth } from './utils/date'
+import { monthEndDate } from './utils/recurrence'
 
 function App() {
   const finance = useFinance()
+  const initialMonth = currentMonth()
   const [page, setPage] = useState<AppPage>(() =>
     finance.items.length > 0 || finance.investments.length > 0 ? 'dashboard' : 'planning',
   )
-  const [month, setMonth] = useState(currentMonth())
-  const [cutoffDate, setCutoffDate] = useState(today())
+  const [month, setMonth] = useState(initialMonth)
+  const [cutoffDate, setCutoffDate] = useState(() => monthEndDate(initialMonth))
   const occurrences = useMemo(() => finance.occurrencesForMonth(month), [finance, month])
 
   useEffect(() => {
@@ -32,7 +28,7 @@ function App() {
 
   const changeMonth = (nextMonth: string) => {
     setMonth(nextMonth)
-    setCutoffDate(cutoffForMonth(nextMonth))
+    setCutoffDate(monthEndDate(nextMonth))
   }
 
   const hasExistingData =

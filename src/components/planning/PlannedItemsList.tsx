@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FinancialItem, FinancialItemKind } from '../../types/finance'
-import type { TransactionType } from '../../types/transaction'
+import type { TransactionType } from '../../types/common'
 import { formatCurrency } from '../../utils/currency'
 import { formatDate, today } from '../../utils/date'
 import { filterPlannedItems, isCurrentPlannedItem, type PlannedItemScope } from '../../utils/planning'

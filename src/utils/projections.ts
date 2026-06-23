@@ -11,9 +11,7 @@ export function calculateDashboardSummary(
   const expectedIncome = sum(active.filter((item) => item.type === 'income'))
   const expectedExpenses = sum(active.filter((item) => item.type === 'expense'))
   const untilCutoff = active.filter((item) => item.dueDate <= cutoffDate)
-  const completed = active.filter(
-    (item) => item.status === 'completed' && (item.completedAt?.slice(0, 10) ?? item.dueDate) <= cutoffDate,
-  )
+  const completed = active.filter((item) => item.status === 'completed' && item.dueDate <= cutoffDate)
   const receivedIncome = sum(completed.filter((item) => item.type === 'income'))
   const paidExpenses = sum(completed.filter((item) => item.type === 'expense'))
   const fixedIncome = sum(

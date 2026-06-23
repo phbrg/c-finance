@@ -1,4 +1,5 @@
 import { useRef, useState, type ChangeEvent } from 'react'
+import { readFinanceBackupFile } from '../../services/financeBackupService'
 
 interface WelcomeImportProps {
   onImport: (content: string) => boolean
@@ -15,15 +16,12 @@ export function WelcomeImport({ onImport, onImported }: WelcomeImportProps) {
     event.target.value = ''
     if (!file) return
     setFileName(file.name)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('O arquivo ultrapassa o limite de 10 MB.')
-      return
-    }
     try {
-      const content = await file.text()
+      setError(null)
+      const content = await readFinanceBackupFile(file)
       if (onImport(content)) onImported()
-    } catch {
-      setError('Não foi possível ler o arquivo selecionado.')
+    } catch (readError: unknown) {
+      setError(readError instanceof Error ? readError.message : 'Não foi possível ler o arquivo selecionado.')
     }
   }
 

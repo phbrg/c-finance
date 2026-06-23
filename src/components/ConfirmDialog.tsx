@@ -33,10 +33,10 @@ export function ConfirmDialog({
         aria-describedby="dialog-description"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-full bg-rose-950 text-xl text-rose-400">!</div>
-        <h2 id="dialog-title" className="text-xl font-bold text-slate-100">{title}</h2>
-        <p id="dialog-description" className="mt-2 text-sm leading-6 text-slate-400">{description}</p>
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="dialog-icon">!</div>
+        <h2 id="dialog-title" className="dialog-title">{title}</h2>
+        <p id="dialog-description" className="dialog-description">{description}</p>
+        <div className="dialog-actions">
           <button type="button" className="button-secondary" onClick={onCancel} autoFocus>Cancelar</button>
           <button type="button" className="button-danger" onClick={onConfirm}>{confirmLabel}</button>
         </div>

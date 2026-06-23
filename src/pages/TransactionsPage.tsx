@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FinanceData, FinancialOccurrence, OccurrenceStatus } from '../types/finance'
-import type { TransactionType } from '../types/transaction'
+import type { TransactionType } from '../types/common'
 import { DashboardHeader } from '../components/layout/DashboardHeader'
 import { OccurrenceList } from '../components/transactions/OccurrenceList'
 import { OccurrenceOverview } from '../components/transactions/OccurrenceOverview'
