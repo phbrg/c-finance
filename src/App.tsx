@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { PlanningPage } from './pages/PlanningPage'
 import { TransactionsPage } from './pages/TransactionsPage'
 import { InvestmentsPage } from './pages/InvestmentsPage'
+import { FaqPage } from './pages/FaqPage'
 import { WelcomePage } from './pages/WelcomePage'
 import type { AppPage } from './types/finance'
 import { currentMonth } from './utils/date'
@@ -93,6 +94,7 @@ function App() {
         onImport={finance.importBackup}
       />
     ),
+    faq: <FaqPage data={finance.data} onImport={finance.importBackup} />,
   }[page]
 
   return (

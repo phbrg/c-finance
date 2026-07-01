@@ -10,6 +10,7 @@ const items: Array<{ page: AppPage; label: string; icon: string }> = [
   { page: 'planning', label: 'Planejamento', icon: '◎' },
   { page: 'transactions', label: 'Lançamentos', icon: '⇄' },
   { page: 'investments', label: 'Investimentos', icon: '↗' },
+  { page: 'faq', label: 'FAQ', icon: '?' },
 ]
 
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
