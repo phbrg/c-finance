@@ -20,7 +20,7 @@ function investment(index: number): Investment {
 
 describe('investment list', () => {
   it('loads large portfolios progressively', () => {
-    render(<InvestmentList investments={Array.from({ length: 10 }, (_, index) => investment(index + 1))} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    render(<InvestmentList investments={Array.from({ length: 10 }, (_, index) => investment(index + 1))} referenceDate="2026-06-22" onEdit={vi.fn()} onDelete={vi.fn()} />)
 
     expect(screen.getByText('Aplicação 8')).toBeInTheDocument()
     expect(screen.queryByText('Aplicação 9')).not.toBeInTheDocument()
@@ -29,7 +29,7 @@ describe('investment list', () => {
   })
 
   it('searches by institution without changing portfolio data', () => {
-    render(<InvestmentList investments={[investment(1), investment(2)]} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    render(<InvestmentList investments={[investment(1), investment(2)]} referenceDate="2026-06-22" onEdit={vi.fn()} onDelete={vi.fn()} />)
 
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Banco Azul' } })
     expect(screen.getByText('Aplicação 2')).toBeInTheDocument()

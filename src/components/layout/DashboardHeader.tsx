@@ -11,7 +11,8 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ title, description, data, onImport }: DashboardHeaderProps) {
   return (
     <header className="dashboard-header">
-      <div>
+      <div className="dashboard-header-copy">
+        <span className="page-path">Área pessoal <i>/</i> {title}</span>
         <h1>{title}</h1>
         <p>{description}</p>
       </div>

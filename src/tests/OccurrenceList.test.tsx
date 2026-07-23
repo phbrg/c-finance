@@ -20,6 +20,8 @@ describe('occurrence list', () => {
     const onStatusChange = vi.fn()
     render(<OccurrenceList occurrences={[occurrence]} onStatusChange={onStatusChange} />)
 
+    expect(screen.getByText('Gasto')).toBeInTheDocument()
+    expect(screen.getByText('Moradia')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar Aluguel' }))
     expect(onStatusChange).toHaveBeenCalledWith(occurrence.key, 'completed')
   })

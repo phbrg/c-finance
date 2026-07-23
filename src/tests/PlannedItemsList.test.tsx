@@ -19,7 +19,7 @@ function item(index: number): FinancialItem {
 
 describe('planned items list', () => {
   it('shows items progressively instead of rendering the full history', () => {
-    render(<PlannedItemsList items={Array.from({ length: 10 }, (_, index) => item(index + 1))} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    render(<PlannedItemsList items={Array.from({ length: 10 }, (_, index) => item(index + 1))} onCreate={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
 
     expect(screen.getByText('Item 8')).toBeInTheDocument()
     expect(screen.queryByText('Item 9')).not.toBeInTheDocument()
@@ -29,7 +29,7 @@ describe('planned items list', () => {
   })
 
   it('filters items by search and type', () => {
-    render(<PlannedItemsList items={[item(1), item(2)]} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    render(<PlannedItemsList items={[item(1), item(2)]} onCreate={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
 
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Renda' } })
     expect(screen.getByText('Item 2')).toBeInTheDocument()

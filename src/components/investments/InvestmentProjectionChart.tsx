@@ -1,15 +1,16 @@
 import type { Investment } from '../../types/finance'
 import { formatCurrency } from '../../utils/currency'
-import { portfolioProjectionSeries } from '../../utils/investmentProjections'
+import { portfolioMonthlyProjectionSeries } from '../../utils/investmentProjections'
 
 interface InvestmentProjectionChartProps {
   investments: Investment[]
   years: number
+  referenceDate: string
   onYearsChange: (years: number) => void
 }
 
-export function InvestmentProjectionChart({ investments, years, onYearsChange }: InvestmentProjectionChartProps) {
-  const series = portfolioProjectionSeries(investments, years)
+export function InvestmentProjectionChart({ investments, years, referenceDate, onYearsChange }: InvestmentProjectionChartProps) {
+  const series = portfolioMonthlyProjectionSeries(investments, years, referenceDate)
   const maximum = Math.max(...series.map((point) => point.balance), 1)
   const xForIndex = (index: number) => (index / Math.max(series.length - 1, 1)) * 100
   const yForValue = (value: number) => 88 - (value / maximum) * 72
@@ -19,12 +20,13 @@ export function InvestmentProjectionChart({ investments, years, onYearsChange }:
   const final = series.at(-1)!
   const earnings = final.balance - final.principal
   const labelInterval = years <= 5 ? 1 : years <= 10 ? 2 : 5
-  const axisPoints = series.filter((point) => point.year === 0 || point.year === years || point.year % labelInterval === 0)
+  const axisPoints = series.filter((point) => point.month === 0 || point.month === years * 12 || point.month % (labelInterval * 12) === 0)
+  const milestonePoints = series.filter((point) => point.month === 0 || point.month === years * 12 || point.month % 12 === 0)
 
   return (
-    <section className="workspace-card investment-chart-card">
+    <section className={`workspace-card investment-chart-card ${investments.length === 0 ? 'empty' : ''}`}>
       <div className="card-heading investment-projection-heading">
-        <div><span className="overline">Juros compostos</span><h2>Evolução estimada da carteira</h2><p>Compare o que foi aportado com o crescimento estimado ao longo do tempo.</p></div>
+        <div><span className="overline">Juros compostos</span><h2>Evolução estimada da carteira</h2><p>Uma curva mensal que parte do saldo estimado de hoje e separa aportes de rendimento.</p></div>
         <label className="field investment-horizon-field"><span>Horizonte</span><select value={years} onChange={(event) => onYearsChange(Number(event.target.value))}><option value="1">1 ano</option><option value="3">3 anos</option><option value="5">5 anos</option><option value="10">10 anos</option><option value="20">20 anos</option></select></label>
       </div>
 
@@ -42,8 +44,8 @@ export function InvestmentProjectionChart({ investments, years, onYearsChange }:
                 <polyline points={principalPoints} className="investment-principal-line" />
                 <polyline points={balancePoints} className="chart-line" />
               </svg>
-              {series.map((point, index) => <span aria-hidden="true" className="investment-chart-point" key={point.year} style={{ left: `${xForIndex(index)}%`, top: `${yForValue(point.balance)}%` }} title={`${point.year === 0 ? 'Hoje' : `${point.year} anos`}: ${formatCurrency(point.balance)}`} />)}
-              <div className="investment-x-axis" aria-hidden="true">{axisPoints.map((point) => <span key={point.year} style={{ left: `${(point.year / years) * 100}%` }}>{point.year === 0 ? 'Hoje' : `${point.year}a`}</span>)}</div>
+              {milestonePoints.map((point) => <span aria-hidden="true" className="investment-chart-point" key={point.month} style={{ left: `${(point.month / (years * 12)) * 100}%`, top: `${yForValue(point.balance)}%` }} title={`${point.month === 0 ? 'Hoje' : `${point.month / 12} anos`}: ${formatCurrency(point.balance)}`} />)}
+              <div className="investment-x-axis" aria-hidden="true">{axisPoints.map((point) => <span key={point.month} style={{ left: `${(point.month / (years * 12)) * 100}%` }}>{point.month === 0 ? 'Hoje' : `${point.month / 12}a`}</span>)}</div>
             </div>
           </div>
           <div className="investment-projection-milestones">
@@ -53,7 +55,7 @@ export function InvestmentProjectionChart({ investments, years, onYearsChange }:
           </div>
         </>
       )}
-      <p className="projection-disclaimer"><strong>Importante:</strong> esta é uma simulação baseada nas taxas informadas e em aportes constantes. Ela não considera impostos, inflação, variações de taxa ou garantias de rentabilidade.</p>
+      <p className="projection-disclaimer"><strong>Importante:</strong> a atualização diária é uma estimativa com taxa anual constante. O banco pode usar CDI variável, dias úteis, impostos, carência e arredondamentos próprios.</p>
     </section>
   )
 }

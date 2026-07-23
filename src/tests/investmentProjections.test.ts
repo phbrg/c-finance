@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import type { Investment } from '../types/finance'
-import { effectiveMonthlyRate, portfolioProjectionSeries, projectInvestment, projectPortfolio } from '../utils/investmentProjections'
+import {
+  effectiveDailyRate,
+  effectiveMonthlyRate,
+  estimateInvestmentBalance,
+  estimatePortfolioBalance,
+  portfolioMonthlyProjectionSeries,
+  portfolioProjectionSeries,
+  projectInvestment,
+  projectPortfolio,
+} from '../utils/investmentProjections'
 
 function investment(overrides: Partial<Investment> = {}): Investment {
   return {
@@ -21,6 +30,26 @@ function investment(overrides: Partial<Investment> = {}): Investment {
 describe('investment projections', () => {
   it('converts an effective annual rate into its monthly equivalent', () => {
     expect(Math.pow(1 + effectiveMonthlyRate(1_200), 12) - 1).toBeCloseTo(0.12)
+    expect(Math.pow(1 + effectiveDailyRate(1_200), 365) - 1).toBeCloseTo(0.12)
+  })
+
+  it('estimates daily growth from the reported balance date', () => {
+    const estimate = estimateInvestmentBalance(
+      investment({ balanceDate: '2026-01-01' }),
+      '2027-01-01',
+    )
+
+    expect(estimate.estimatedBalance).toBe(112_000)
+    expect(estimate.accruedEarnings).toBe(12_000)
+    expect(estimate.elapsedDays).toBe(365)
+  })
+
+  it('does not reduce a balance when its reference date is in the future', () => {
+    expect(estimateInvestmentBalance(investment({ balanceDate: '2026-07-01' }), '2026-06-01')).toMatchObject({
+      estimatedBalance: 100_000,
+      accruedEarnings: 0,
+      elapsedDays: 0,
+    })
   })
 
   it('compounds the current balance for one year', () => {
@@ -42,9 +71,11 @@ describe('investment projections', () => {
   it('aggregates multiple investments and builds a yearly series', () => {
     const investments = [investment(), investment({ id: 'investment-2', currentBalance: 50_000 })]
     expect(projectPortfolio(investments, 0).balance).toBe(150_000)
+    expect(estimatePortfolioBalance(investments, '2026-07-19').estimatedBalance).toBeGreaterThan(150_000)
     const series = portfolioProjectionSeries(investments, 5)
     expect(series).toHaveLength(6)
     expect(series[0].year).toBe(0)
     expect(series[5].balance).toBeGreaterThan(series[0].balance)
+    expect(portfolioMonthlyProjectionSeries(investments, 1, '2026-07-19')).toHaveLength(13)
   })
 })

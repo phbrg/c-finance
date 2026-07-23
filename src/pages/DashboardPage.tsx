@@ -51,13 +51,15 @@ export function DashboardPage({ data, month, cutoffDate, occurrences, occurrence
           </section>
           <DashboardCards summary={summary} cutoffDate={cutoffDate} />
           <PeriodProgress summary={summary} cutoffDate={cutoffDate} />
-          <div className="dashboard-grid-primary">
-            <CashFlowChart occurrences={occurrences} />
-            <FinancialInsights summary={summary} occurrences={occurrences} />
-          </div>
-          <div className="dashboard-grid-secondary">
-            <MonthlyComparison months={comparisonMonths} />
-            <CategoryChart occurrences={occurrences} />
+          <div className="dashboard-analytics-layout">
+            <div className="dashboard-main-column">
+              <CashFlowChart occurrences={occurrences} />
+              <MonthlyComparison months={comparisonMonths} />
+            </div>
+            <div className="dashboard-side-column">
+              <FinancialInsights summary={summary} occurrences={occurrences} />
+              <CategoryChart occurrences={occurrences} />
+            </div>
           </div>
         </>
       )}

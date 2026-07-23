@@ -8,13 +8,14 @@ import { ConfirmDialog } from '../ConfirmDialog'
 
 interface PlannedItemsListProps {
   items: FinancialItem[]
+  onCreate: () => void
   onEdit: (item: FinancialItem) => void
   onDelete: (id: string) => void
 }
 
 const PAGE_SIZE = 8
 
-export function PlannedItemsList({ items, onEdit, onDelete }: PlannedItemsListProps) {
+export function PlannedItemsList({ items, onCreate, onEdit, onDelete }: PlannedItemsListProps) {
   const [pendingDelete, setPendingDelete] = useState<FinancialItem | null>(null)
   const [query, setQuery] = useState('')
   const [scope, setScope] = useState<PlannedItemScope>('current')
@@ -43,8 +44,10 @@ export function PlannedItemsList({ items, onEdit, onDelete }: PlannedItemsListPr
   return (
     <section className="workspace-card planned-items-card">
       <div className="card-heading planned-items-heading">
-        <div><span className="overline">Sua base</span><h2>Itens planejados</h2><p>Encontre, revise e mantenha sua base financeira organizada.</p></div>
-        <span className="count-badge">{items.length}</span>
+        <div><span className="overline">Sua base</span><h2>Ganhos e gastos planejados</h2><p>Visualize valores, frequência e vigência sem precisar abrir cada item.</p></div>
+        <div className="planned-heading-actions">
+          <button type="button" className="button-primary planned-create-button" onClick={onCreate}><span aria-hidden="true">＋</span>Adicionar nova transação</button>
+        </div>
       </div>
 
       {items.length === 0 ? (
@@ -74,28 +77,40 @@ export function PlannedItemsList({ items, onEdit, onDelete }: PlannedItemsListPr
           {filteredItems.length === 0 ? (
             <div className="planned-filter-empty"><strong>Nenhum item encontrado.</strong><span>Tente ajustar a busca ou os filtros selecionados.</span>{hasSecondaryFilters && <button type="button" className="button-secondary" onClick={clearFilters}>Limpar filtros</button>}</div>
           ) : (
-            <div className="planned-list">
+            <div className="planned-table">
+              <div className="planned-table-header" aria-hidden="true">
+                <span>Item</span>
+                <span>Movimento</span>
+                <span>Frequência</span>
+                <span>Vigência</span>
+                <span>Valor</span>
+                <span>Ações</span>
+              </div>
+              <div className="planned-list">
               {visibleItems.map((item) => (
                 <article key={item.id} className="planned-row">
-                  <span className={`item-dot ${item.type}`} />
                   <div className="planned-main">
-                    <div><strong>{item.title}</strong><span className="category-pill">{item.category}</span></div>
+                    <div className="planned-title-row"><span className={`item-dot ${item.type}`} /><strong>{item.title}</strong><span className="category-pill">{item.category}</span></div>
+                    {item.notes && <small className="planned-notes">{item.notes}</small>}
                     {item.investmentId && <span className="linked-investment-label">Vinculado a investimento</span>}
-                    <small>
-                      {item.kind === 'recurring'
-                        ? `Todo dia ${item.recurrence?.dayOfMonth} · ${formatRecurrencePeriod(item)}`
-                        : `Único · ${item.dueDate ? formatDate(item.dueDate) : ''}`}
-                    </small>
                   </div>
-                  <strong className={item.type === 'income' ? 'amount-income' : 'amount-expense'}>
-                    {item.type === 'income' ? '+' : '−'} {formatCurrency(item.amount)}
-                  </strong>
-                  <div className="row-actions">
-                    <button type="button" className="icon-button edit-button" aria-label={`Editar ${item.title}`} title="Editar" onClick={() => onEdit(item)}>✎</button>
-                    <button type="button" className="icon-button" aria-label={`Excluir ${item.title}`} title="Excluir" onClick={() => setPendingDelete(item)}>×</button>
+                  <div className="planned-type-cell" data-label="Movimento"><span className={`movement-pill ${item.type}`}>{item.type === 'income' ? 'Ganho' : 'Gasto'}</span></div>
+                  <div className="planned-detail-cell planned-frequency-cell" data-label="Frequência">
+                    <strong>{item.kind === 'recurring' ? 'Fixo mensal' : 'Item único'}</strong>
+                    <small>{item.kind === 'recurring' ? `Todo dia ${item.recurrence?.dayOfMonth}` : 'Não se repete'}</small>
+                  </div>
+                  <div className="planned-detail-cell planned-period-cell" data-label="Vigência">
+                    <strong>{item.kind === 'recurring' ? `Desde ${formatMonth(item.recurrence?.startMonth)}` : item.dueDate ? formatDate(item.dueDate) : '—'}</strong>
+                    <small>{item.kind === 'recurring' ? formatRecurrenceEnd(item) : 'Data prevista'}</small>
+                  </div>
+                  <div className="planned-amount-cell" data-label="Valor"><strong className={item.type === 'income' ? 'amount-income' : 'amount-expense'}>{item.type === 'income' ? '+' : '−'} {formatCurrency(item.amount)}</strong></div>
+                  <div className="row-actions" data-label="Ações">
+                    <button type="button" className="icon-button edit-button" aria-label={`Editar ${item.title}`} title="Editar" onClick={() => onEdit(item)}><span aria-hidden="true">✎</span><span className="planned-action-label">Editar</span></button>
+                    <button type="button" className="icon-button" aria-label={`Excluir ${item.title}`} title="Excluir" onClick={() => setPendingDelete(item)}><span aria-hidden="true">×</span><span className="planned-action-label">Excluir</span></button>
                   </div>
                 </article>
               ))}
+              </div>
             </div>
           )}
 
@@ -125,9 +140,8 @@ function formatMonth(month?: string): string {
   return `${monthNumber}/${year}`
 }
 
-function formatRecurrencePeriod(item: FinancialItem): string {
-  const start = formatMonth(item.recurrence?.startMonth)
+function formatRecurrenceEnd(item: FinancialItem): string {
   return item.recurrence?.endMonth
-    ? `de ${start} até ${formatMonth(item.recurrence.endMonth)}`
-    : `desde ${start} · sem data final`
+    ? `Até ${formatMonth(item.recurrence.endMonth)}`
+    : 'Sem data final'
 }

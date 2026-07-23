@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FinancialItem, FinancialItemDraft, FinanceData } from '../types/finance'
 import { DashboardHeader } from '../components/layout/DashboardHeader'
-import { FinancialItemForm } from '../components/planning/FinancialItemForm'
+import { FinancialItemDialog } from '../components/planning/FinancialItemDialog'
 import { PlanningOverview } from '../components/planning/PlanningOverview'
 import { PlannedItemsList } from '../components/planning/PlannedItemsList'
 
@@ -15,18 +15,26 @@ interface PlanningPageProps {
 
 export function PlanningPage({ data, onAdd, onUpdate, onDelete, onImport }: PlanningPageProps) {
   const [editingItem, setEditingItem] = useState<FinancialItem | null>(null)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+
+  const closeForm = () => {
+    setIsFormOpen(false)
+    setEditingItem(null)
+  }
+
+  const createItem = () => {
+    setEditingItem(null)
+    setIsFormOpen(true)
+  }
 
   const editItem = (item: FinancialItem) => {
     setEditingItem(item)
-    window.requestAnimationFrame(() => {
-      document.getElementById('financial-item-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
+    setIsFormOpen(true)
   }
 
   const submitItem = (draft: FinancialItemDraft): boolean => {
-    if (!editingItem) return onAdd(draft)
-    const saved = onUpdate(editingItem.id, draft)
-    if (saved) setEditingItem(null)
+    const saved = editingItem ? onUpdate(editingItem.id, draft) : onAdd(draft)
+    if (saved) closeForm()
     return saved
   }
 
@@ -41,12 +49,15 @@ export function PlanningPage({ data, onAdd, onUpdate, onDelete, onImport }: Plan
         </section>
       )}
       {data.items.length > 0 && <PlanningOverview items={data.items} />}
-      <div className="planning-layout">
-        <FinancialItemForm key={editingItem?.id ?? 'new-item'} onSubmit={submitItem} editingItem={editingItem} investments={data.investments} onCancel={() => setEditingItem(null)} />
-        <div className="planning-side">
-          <PlannedItemsList items={data.items} onEdit={editItem} onDelete={onDelete} />
-        </div>
-      </div>
+      <PlannedItemsList items={data.items} onCreate={createItem} onEdit={editItem} onDelete={onDelete} />
+      {isFormOpen && (
+        <FinancialItemDialog
+          editingItem={editingItem}
+          investments={data.investments}
+          onSubmit={submitItem}
+          onClose={closeForm}
+        />
+      )}
     </div>
   )
 }

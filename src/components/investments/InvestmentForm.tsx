@@ -7,7 +7,7 @@ import { today } from '../../utils/date'
 interface InvestmentFormProps {
   editingInvestment?: Investment | null
   onSubmit: (draft: InvestmentDraft) => boolean
-  onCancel?: () => void
+  onCancel: () => void
 }
 
 const emptyForm = {
@@ -28,6 +28,10 @@ export function InvestmentForm({ editingInvestment, onSubmit, onCancel }: Invest
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const annualRate = Number(form.annualRate.replace(',', '.'))
+    if (form.balanceDate > today()) {
+      setError('A data do saldo não pode estar no futuro.')
+      return
+    }
     const result = investmentDraftSchema.safeParse({
       name: form.name,
       institution: form.institution,
@@ -51,15 +55,15 @@ export function InvestmentForm({ editingInvestment, onSubmit, onCancel }: Invest
   return (
     <form id="investment-form" className={`workspace-card investment-form ${editingInvestment ? 'editing' : ''}`} onSubmit={submit} noValidate>
       <div className="card-heading">
-        <div><span className="overline">{editingInvestment ? 'Editando aplicação' : 'Nova aplicação'}</span><h2>{editingInvestment?.name ?? 'Adicionar investimento'}</h2><p>{editingInvestment ? 'Atualize saldo, taxa ou aporte para recalcular toda a carteira.' : 'Registre reservas, caixinhas e aplicações de renda previsível.'}</p></div>
-        {editingInvestment && <span className="editing-badge">Modo edição</span>}
+        <div><span className="overline">{editingInvestment ? 'Editando aplicação' : 'Nova aplicação'}</span><h2 id="investment-dialog-title">{editingInvestment?.name ?? 'Adicionar investimento'}</h2><p>{editingInvestment ? 'Atualize saldo, taxa ou aporte para recalcular toda a carteira.' : 'Registre reservas, caixinhas e aplicações de renda previsível.'}</p></div>
+        <div className="item-form-heading-actions">{editingInvestment && <span className="editing-badge">Modo edição</span>}<button type="button" className="dialog-close-button" aria-label="Fechar formulário" onClick={onCancel}>×</button></div>
       </div>
-      <div className="investment-form-note"><span aria-hidden="true">i</span><p>O saldo pode começar em zero. A taxa anual e o aporte mensal serão usados apenas nas simulações.</p></div>
+      <div className="investment-form-note"><span aria-hidden="true">i</span><p>O saldo informado será estimado diariamente a partir da data de referência. Use o valor líquido mostrado pelo banco para manter a carteira sincronizada.</p></div>
       <div className="form-grid">
         <label className="field wide"><span>Nome</span><input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Reserva de emergência" /></label>
         <label className="field wide"><span>Instituição ou local</span><input value={form.institution} onChange={(event) => setForm({ ...form, institution: event.target.value })} placeholder="Ex.: Caixinha Nubank" /></label>
         <label className="field"><span>Saldo atual</span><div className="money-input"><span>R$</span><input inputMode="decimal" value={form.currentBalance} onChange={(event) => setForm({ ...form, currentBalance: event.target.value })} /></div></label>
-        <label className="field"><span>Saldo referente a</span><input type="date" value={form.balanceDate} onChange={(event) => setForm({ ...form, balanceDate: event.target.value })} /></label>
+        <label className="field"><span>Saldo referente a</span><input type="date" max={today()} value={form.balanceDate} onChange={(event) => setForm({ ...form, balanceDate: event.target.value })} /></label>
         <label className="field"><span>Rentabilidade estimada</span><div className="suffix-input"><input inputMode="decimal" value={form.annualRate} onChange={(event) => setForm({ ...form, annualRate: event.target.value })} placeholder="Ex.: 10,5" /><span>% ao ano</span></div></label>
         <label className="field"><span>Aporte mensal</span><div className="money-input"><span>R$</span><input inputMode="decimal" value={form.monthlyContribution} onChange={(event) => setForm({ ...form, monthlyContribution: event.target.value })} /></div></label>
         <label className="field"><span>Dia do aporte</span><input type="number" min="1" max="31" value={form.contributionDay} onChange={(event) => setForm({ ...form, contributionDay: event.target.value })} /></label>
@@ -70,7 +74,7 @@ export function InvestmentForm({ editingInvestment, onSubmit, onCancel }: Invest
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
       <div className="form-actions">
-        {editingInvestment && <button type="button" className="button-secondary" onClick={onCancel}>Cancelar</button>}
+        <button type="button" className="button-secondary" onClick={onCancel}>Cancelar</button>
         <button type="submit" className="button-primary">{editingInvestment ? 'Salvar alterações' : 'Adicionar investimento'}</button>
       </div>
     </form>

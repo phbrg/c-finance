@@ -67,8 +67,11 @@ export function FinancialItemForm({ onSubmit, editingItem, investments = [], onC
   return (
     <form id="financial-item-form" className={`workspace-card item-form ${editingItem ? 'editing' : ''}`} onSubmit={submit} noValidate>
       <div className="card-heading">
-        <div><span className="overline">{editingItem ? 'Editando item' : 'Novo item'}</span><h2>{editingItem ? editingItem.title : 'Adicionar ao planejamento'}</h2><p>{editingItem ? 'Revise os dados e salve para atualizar suas projeções.' : 'Cadastre algo que entra ou sai do seu orçamento.'}</p></div>
-        {editingItem && <span className="editing-badge">Modo edição</span>}
+        <div><span className="overline">{editingItem ? 'Editando item' : 'Novo item'}</span><h2 id="financial-item-dialog-title">{editingItem ? editingItem.title : 'Adicionar ao planejamento'}</h2><p>{editingItem ? 'Revise os dados e salve para atualizar suas projeções.' : 'Cadastre algo que entra ou sai do seu orçamento.'}</p></div>
+        <div className="item-form-heading-actions">
+          {editingItem && <span className="editing-badge">Modo edição</span>}
+          {onCancel && <button type="button" className="dialog-close-button" aria-label="Fechar formulário" onClick={onCancel}>×</button>}
+        </div>
       </div>
       <div className="type-toggle" role="group" aria-label="Tipo financeiro">
         <button type="button" className={`income ${form.type === 'income' ? 'active' : ''}`} aria-label="Ganho" aria-pressed={form.type === 'income'} onClick={() => setForm({ ...form, type: 'income', investmentId: '' })}><span aria-hidden="true">＋</span><div><strong>Ganho</strong><small>Dinheiro que entra</small></div></button>
@@ -105,7 +108,7 @@ export function FinancialItemForm({ onSubmit, editingItem, investments = [], onC
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
       <div className="form-actions">
-        {editingItem && <button type="button" className="button-secondary" onClick={onCancel}>Cancelar</button>}
+        {onCancel && <button type="button" className="button-secondary" onClick={onCancel}>Cancelar</button>}
         <button type="submit" className="button-primary">{editingItem ? 'Salvar alterações' : 'Adicionar item'}</button>
       </div>
     </form>

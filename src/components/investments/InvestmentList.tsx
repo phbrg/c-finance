@@ -1,19 +1,21 @@
 import { useMemo, useState } from 'react'
 import type { Investment } from '../../types/finance'
 import { formatCurrency } from '../../utils/currency'
-import { projectInvestment } from '../../utils/investmentProjections'
+import { formatDate } from '../../utils/date'
+import { estimateInvestmentBalance, projectInvestment } from '../../utils/investmentProjections'
 import { filterInvestments, type InvestmentSort } from '../../utils/portfolio'
 import { ConfirmDialog } from '../ConfirmDialog'
 
 interface InvestmentListProps {
   investments: Investment[]
+  referenceDate: string
   onEdit: (investment: Investment) => void
   onDelete: (id: string) => void
 }
 
 const PAGE_SIZE = 8
 
-export function InvestmentList({ investments, onEdit, onDelete }: InvestmentListProps) {
+export function InvestmentList({ investments, referenceDate, onEdit, onDelete }: InvestmentListProps) {
   const [pendingDelete, setPendingDelete] = useState<Investment | null>(null)
   const [query, setQuery] = useState('')
   const [institution, setInstitution] = useState('all')
@@ -23,7 +25,7 @@ export function InvestmentList({ investments, onEdit, onDelete }: InvestmentList
   const filtered = useMemo(() => filterInvestments(investments, query, institution, sort), [investments, query, institution, sort])
   const visible = filtered.slice(0, visibleCount)
   const remainingCount = Math.max(filtered.length - visible.length, 0)
-  const totalBalance = investments.reduce((sum, item) => sum + item.currentBalance, 0)
+  const totalBalance = investments.reduce((sum, item) => sum + estimateInvestmentBalance(item, referenceDate).estimatedBalance, 0)
   const hasFilters = Boolean(query || institution !== 'all' || sort !== 'balance')
   const resetVisible = () => setVisibleCount(PAGE_SIZE)
   const clearFilters = () => {
@@ -47,22 +49,25 @@ export function InvestmentList({ investments, onEdit, onDelete }: InvestmentList
       <div className="investment-results-meta"><span>{filtered.length} {filtered.length === 1 ? 'investimento encontrado' : 'investimentos encontrados'}</span>{hasFilters && <button type="button" onClick={clearFilters}>Limpar filtros</button>}</div>
 
       {filtered.length === 0 ? <div className="investment-filter-empty"><strong>Nenhum investimento encontrado.</strong><span>Tente ajustar a busca ou os filtros selecionados.</span><button type="button" className="button-secondary" onClick={clearFilters}>Limpar filtros</button></div> : (
-        <div className="investment-list">
-          {visible.map((investment) => {
-            const oneYear = projectInvestment(investment, 12)
-            const allocation = totalBalance > 0 ? (investment.currentBalance / totalBalance) * 100 : 0
-            return (
-              <article key={investment.id} className="investment-row">
-                <div className="investment-monogram">{investment.name.slice(0, 1).toUpperCase()}</div>
-                <div className="investment-main"><strong>{investment.name}</strong><small>{investment.institution} · {(investment.annualRateBps / 100).toLocaleString('pt-BR')}% a.a.</small>{investment.linkedFinancialItemId && <span>Aporte vinculado</span>}</div>
-                <div className="investment-allocation"><small>Na carteira</small><strong>{allocation.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</strong></div>
-                <div className="investment-current"><small>Saldo atual</small><strong>{formatCurrency(investment.currentBalance)}</strong></div>
-                <div className="investment-year"><small>Em 1 ano</small><strong>{formatCurrency(oneYear.balance)}</strong></div>
-                <div className="investment-contribution"><small>Aporte mensal</small><strong>{formatCurrency(investment.monthlyContribution)}</strong></div>
-                <div className="row-actions"><button type="button" className="icon-button edit-button" aria-label={`Editar ${investment.name}`} onClick={() => onEdit(investment)}>✎</button><button type="button" className="icon-button" aria-label={`Excluir ${investment.name}`} onClick={() => setPendingDelete(investment)}>×</button></div>
-              </article>
-            )
-          })}
+        <div className="investment-table">
+          <div className="investment-table-header" aria-hidden="true"><span>Aplicação</span><span>Carteira</span><span>Estimado hoje</span><span>Em 1 ano</span><span>Aporte</span><span>Ações</span></div>
+          <div className="investment-list">
+            {visible.map((investment) => {
+              const current = estimateInvestmentBalance(investment, referenceDate)
+              const oneYear = projectInvestment(investment, 12, current.estimatedBalance)
+              const allocation = totalBalance > 0 ? (current.estimatedBalance / totalBalance) * 100 : 0
+              return (
+                <article key={investment.id} className="investment-row">
+                  <div className="investment-identity"><div className="investment-monogram">{investment.name.slice(0, 1).toUpperCase()}</div><div className="investment-main"><strong>{investment.name}</strong><small>{investment.institution} · {(investment.annualRateBps / 100).toLocaleString('pt-BR')}% a.a.</small>{investment.linkedFinancialItemId && <span>Aporte vinculado</span>}</div></div>
+                  <div className="investment-allocation" data-label="Na carteira"><strong>{allocation.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</strong></div>
+                  <div className="investment-current" data-label="Estimado hoje"><strong>{formatCurrency(current.estimatedBalance)}</strong><small>{current.accruedEarnings > 0 ? `+ ${formatCurrency(current.accruedEarnings)} desde ${formatDate(investment.balanceDate)}` : `Informado em ${formatDate(investment.balanceDate)}`}</small></div>
+                  <div className="investment-year" data-label="Em 1 ano"><strong>{formatCurrency(oneYear.balance)}</strong><small>+ {formatCurrency(oneYear.earnings)} em rendimento</small></div>
+                  <div className="investment-contribution" data-label="Aporte mensal"><strong>{formatCurrency(investment.monthlyContribution)}</strong><small>dia {investment.contributionDay}</small></div>
+                  <div className="row-actions"><button type="button" className="icon-button edit-button" aria-label={`Editar ${investment.name}`} onClick={() => onEdit(investment)}><span aria-hidden="true">✎</span><span className="investment-action-label">Editar</span></button><button type="button" className="icon-button" aria-label={`Excluir ${investment.name}`} onClick={() => setPendingDelete(investment)}><span aria-hidden="true">×</span><span className="investment-action-label">Excluir</span></button></div>
+                </article>
+              )
+            })}
+          </div>
         </div>
       )}
 
