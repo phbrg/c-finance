@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { PlanningPage } from './pages/PlanningPage'
 import { TransactionsPage } from './pages/TransactionsPage'
 import { InvestmentsPage } from './pages/InvestmentsPage'
+import { CalculatorPage } from './pages/CalculatorPage'
 import { FaqPage } from './pages/FaqPage'
 import { WelcomePage } from './pages/WelcomePage'
 import type { AppPage } from './types/finance'
@@ -91,6 +92,14 @@ function App() {
         onAdd={finance.addInvestment}
         onUpdate={finance.updateInvestment}
         onDelete={finance.deleteInvestment}
+        onImport={finance.importBackup}
+      />
+    ),
+    calculator: (
+      <CalculatorPage
+        data={finance.data}
+        occurrencesForMonth={finance.occurrencesForMonth}
+        onAdd={finance.addItem}
         onImport={finance.importBackup}
       />
     ),

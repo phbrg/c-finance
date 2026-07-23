@@ -6,13 +6,14 @@ interface SidebarProps {
   onNavigate: (page: AppPage) => void
 }
 
-type NavigationIcon = 'dashboard' | 'planning' | 'transactions' | 'investments' | 'faq'
+type NavigationIcon = 'dashboard' | 'planning' | 'transactions' | 'investments' | 'calculator' | 'faq'
 
 const items: Array<{ page: AppPage; label: string; icon: NavigationIcon }> = [
   { page: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
   { page: 'planning', label: 'Planejamento', icon: 'planning' },
   { page: 'transactions', label: 'Lançamentos', icon: 'transactions' },
   { page: 'investments', label: 'Investimentos', icon: 'investments' },
+  { page: 'calculator', label: 'Calculadora', icon: 'calculator' },
   { page: 'faq', label: 'Ajuda', icon: 'faq' },
 ]
 
@@ -22,6 +23,7 @@ function NavigationIcon({ name }: { name: NavigationIcon }) {
     planning: <><path d="M7 3v3M17 3v3M4 9h16" /><rect x="4" y="5" width="16" height="16" rx="2.5" /><path d="M8 13h3M8 17h6" /></>,
     transactions: <><path d="M5 7h14M15 3l4 4-4 4M19 17H5M9 13l-4 4 4 4" /></>,
     investments: <><path d="M4 19V9M10 19V5M16 19v-7M22 19H2" /><path d="m4 10 6-5 6 7 5-6" /></>,
+    calculator: <><rect x="4" y="2.5" width="16" height="19" rx="2.5" /><path d="M7.5 6.5h9M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18.5h.01M12 18.5h4" /></>,
     faq: <><circle cx="12" cy="12" r="9" /><path d="M9.8 9a2.35 2.35 0 0 1 4.55.8c0 1.8-2.35 2-2.35 3.7M12 17h.01" /></>,
   }
 

@@ -112,4 +112,4 @@ export interface DashboardSummary {
   fixedCommitmentPercentage: number | null
 }
 
-export type AppPage = 'dashboard' | 'planning' | 'transactions' | 'investments' | 'faq'
+export type AppPage = 'dashboard' | 'planning' | 'transactions' | 'investments' | 'calculator' | 'faq'
