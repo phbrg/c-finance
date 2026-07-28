@@ -28,15 +28,15 @@ export function WelcomeImport({ onImport, onImported }: WelcomeImportProps) {
   return (
     <div className="welcome-import">
       <div>
-        <span className="welcome-section-number">Já usa o c-finance?</span>
-        <h2>Continue de onde parou.</h2>
-        <p>Importe seu backup e recupere planejamento, lançamentos e investimentos neste navegador.</p>
+        <span className="welcome-section-label">Já usa o c-finance?</span>
+        <h2>Seus dados podem vir com você.</h2>
+        <p>Escolha um backup do c-finance para recuperar seu planejamento, lançamentos e investimentos neste navegador.</p>
       </div>
       <div className="welcome-import-action">
         <button type="button" className="welcome-import-button" onClick={() => inputRef.current?.click()}>
           <span aria-hidden="true">↑</span>
-          <strong>Importar meus dados</strong>
-          <small>{fileName ?? 'Selecione um backup JSON do c-finance'}</small>
+          <strong>Selecionar meu backup</strong>
+          <small>{fileName ?? 'Arquivo JSON exportado pelo c-finance'}</small>
         </button>
         <input ref={inputRef} className="sr-only" type="file" accept="application/json,.json" onChange={handleFile} />
         {error && <p role="alert">{error}</p>}

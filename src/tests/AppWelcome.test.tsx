@@ -7,8 +7,8 @@ describe('welcome experience', () => {
   it('shows the landing page on the first visit and persists the decision to start', () => {
     render(<App />)
 
-    expect(screen.getByRole('heading', { name: /Seu dinheiro faz mais sentido/ })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Começar meu planejamento/ }))
+    expect(screen.getByRole('heading', { name: /Entenda seu dinheiro antes/ })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Organizar minhas finanças' }))
 
     expect(screen.getByRole('heading', { name: 'Planejamento' })).toBeInTheDocument()
     const saved = JSON.parse(window.localStorage.getItem(FINANCE_STORAGE_KEY) ?? '{}') as { welcomeCompleted?: boolean }
@@ -20,6 +20,6 @@ describe('welcome experience', () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: 'Planejamento' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Começar meu planejamento/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Organizar minhas finanças' })).not.toBeInTheDocument()
   })
 })
