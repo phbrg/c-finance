@@ -6,9 +6,10 @@ import { ConfirmDialog } from '../ConfirmDialog'
 interface FinanceBackupActionsProps {
   data: FinanceData
   onImport: (content: string) => boolean
+  onExported?: () => void
 }
 
-export function FinanceBackupActions({ data, onImport }: FinanceBackupActionsProps) {
+export function FinanceBackupActions({ data, onImport, onExported }: FinanceBackupActionsProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [pendingContent, setPendingContent] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -27,16 +28,16 @@ export function FinanceBackupActions({ data, onImport }: FinanceBackupActionsPro
 
   return (
     <>
-      <div className="header-actions">
-        <button type="button" className="button-secondary" onClick={() => downloadFinanceBackup(data)}>Exportar</button>
-        <button type="button" className="button-secondary" onClick={() => inputRef.current?.click()}>Importar</button>
-        <input ref={inputRef} className="sr-only" type="file" accept="application/json,.json" onChange={handleFile} />
+      <div className="page-actions">
+        <button type="button" className="btn primary" onClick={() => { downloadFinanceBackup(data); onExported?.() }}>Exportar backup</button>
+        <button type="button" className="btn" onClick={() => inputRef.current?.click()}>Importar backup</button>
+        <input ref={inputRef} className="sr-only" type="file" aria-label="Arquivo de backup" accept="application/json,.json" onChange={handleFile} />
       </div>
       {error && <p className="backup-error" role="alert">{error}</p>}
       {pendingContent !== null && (
         <ConfirmDialog
           title="Substituir os dados atuais?"
-          description="O backup substituirá todo o planejamento e todas as confirmações salvas neste navegador."
+          description="O backup substitui tudo o que está salvo neste navegador: itens, saldo inicial e confirmações."
           confirmLabel="Importar backup"
           onCancel={() => setPendingContent(null)}
           onConfirm={() => {

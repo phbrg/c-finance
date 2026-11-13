@@ -1,16 +1,18 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import type { FinancialItem, FinancialItemDraft, Investment } from '../../types/finance'
-import { FinancialItemForm } from './FinancialItemForm'
+import type { CreditCard, FinancialItem, FinancialItemDraft } from '../../types/finance'
+import { FinancialItemForm, type ItemSubmitOptions } from './FinancialItemForm'
 
 interface FinancialItemDialogProps {
   editingItem: FinancialItem | null
-  investments: Investment[]
-  onSubmit: (draft: FinancialItemDraft) => boolean
+  categorySuggestions: string[]
+  cards?: CreditCard[]
+  month: string
+  onSubmit: (draft: FinancialItemDraft, options?: ItemSubmitOptions) => boolean
   onClose: () => void
 }
 
-export function FinancialItemDialog({ editingItem, investments, onSubmit, onClose }: FinancialItemDialogProps) {
+export function FinancialItemDialog({ editingItem, categorySuggestions, cards, month, onSubmit, onClose }: FinancialItemDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -32,12 +34,12 @@ export function FinancialItemDialog({ editingItem, investments, onSubmit, onClos
   }, [onClose])
 
   return createPortal(
-    <div className="financial-item-dialog-backdrop" onMouseDown={(event) => {
+    <div className="sheet-backdrop" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose()
     }}>
       <div
         ref={dialogRef}
-        className="financial-item-dialog"
+        className="sheet"
         role="dialog"
         aria-modal="true"
         aria-labelledby="financial-item-dialog-title"
@@ -46,7 +48,9 @@ export function FinancialItemDialog({ editingItem, investments, onSubmit, onClos
           key={editingItem?.id ?? 'new-item'}
           onSubmit={onSubmit}
           editingItem={editingItem}
-          investments={investments}
+          categorySuggestions={categorySuggestions}
+          cards={cards}
+          month={month}
           onCancel={onClose}
         />
       </div>

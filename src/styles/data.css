@@ -1,0 +1,30 @@
+.data-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: stretch; gap: var(--gap); }
+.data-col { display: grid; grid-auto-rows: auto; align-content: start; gap: var(--gap); }
+.data-panel { display: flex; flex-direction: column; gap: 12px; }
+.data-panel .panel-head { margin-bottom: 2px; }
+.data-panel p { margin: 0; }
+@media (max-width: 1100px) { .data-grid { grid-template-columns: 1fr; } }
+
+.data-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.data-unset { color: var(--muted); }
+.data-empty { display: grid; flex: 1; place-items: center; min-height: 64px; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); padding: 18px 16px; color: var(--muted); font-size: var(--fs-sm); text-align: center; }
+
+.card-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.card-row { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding: 12px 0; }
+.card-row:first-child { border-top: 0; padding-top: 4px; }
+.card-chip { display: grid; flex: none; width: 40px; height: 28px; place-items: center; border: 1px solid #36507f; border-radius: 6px; background: var(--accent-soft); color: #cbdcff; font-size: var(--fs-sm); font-weight: 640; }
+.card-info { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.card-actions { display: flex; flex: none; gap: 8px; }
+
+.card-form { display: grid; grid-template-columns: minmax(0, 1fr) 150px 170px; align-items: end; gap: 12px; margin-top: auto; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-soft); padding: 16px; }
+.card-form .field, .card-form input { min-width: 0; width: 100%; }
+.card-form h3 { grid-column: 1 / -1; margin: 0; font-size: var(--fs-md); font-weight: 600; }
+.card-form-actions { display: flex; grid-column: 1 / -1; justify-content: flex-end; gap: 8px; }
+.card-form + .backup-error { margin: 0; }
+@media (max-width: 560px) {
+  .card-form { grid-template-columns: 1fr; }
+  .card-form-actions .btn { flex: 1; }
+}
+.data-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.data-stats .stat { min-width: 0; }
+@media (max-width: 900px) { .data-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

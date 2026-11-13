@@ -1,0 +1,70 @@
+/* Shared primitives for the whole app. Base font is 14px; nothing in the app should go below 12px. */
+:root {
+  --fs-xs: 12px; --fs-sm: 13px; --fs-md: 14px; --fs-lg: 16px; --fs-xl: 20px; --fs-2xl: 28px;
+  --gap: 16px;
+  font-size: 14px;
+}
+body { font-size: var(--fs-md); line-height: 1.5; }
+
+.page { display: grid; gap: 20px; padding: 28px 32px 56px; width: 100%; max-width: 1680px; margin-inline: auto; }
+.page-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.page-header h1 { margin: 0; font-size: var(--fs-2xl); font-weight: 620; letter-spacing: -.03em; }
+.page-header p { margin: 4px 0 0; color: var(--muted); font-size: var(--fs-md); }
+.page-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.panel { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); padding: 20px; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+.panel-head h2 { margin: 0; font-size: var(--fs-lg); font-weight: 600; }
+.panel-head small, .muted { color: var(--muted); font-size: var(--fs-sm); }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
+.grid-main-side { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr); gap: var(--gap); align-items: start; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.stat { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); padding: 14px 16px; }
+.stat span { display: block; color: var(--muted); font-size: var(--fs-sm); }
+.stat strong { display: block; margin-top: 4px; font-size: var(--fs-xl); font-weight: 640; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat small { display: block; margin-top: 2px; color: var(--muted-soft); font-size: var(--fs-xs); }
+.stat.is-income strong, .is-income { color: var(--income); }
+.stat.is-expense strong, .is-expense { color: var(--expense); }
+.stat.is-warning strong { color: var(--warning); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-raised); padding: 6px 14px; color: var(--text); font-size: var(--fs-md); font-weight: 560; transition: background .15s, border-color .15s; }
+.btn:hover:not(:disabled) { border-color: #496ca9; background: var(--accent-soft); }
+.btn.primary { border-color: #5b8df5; background: var(--accent); color: #fff; }
+.btn.primary:hover:not(:disabled) { background: #5b8cf3; }
+.btn.danger { border-color: #793044; color: #fecdd3; }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+.btn.small { min-height: 30px; padding: 3px 10px; font-size: var(--fs-sm); }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; border: 1px solid var(--border); border-radius: 999px; background: transparent; padding: 3px 12px; color: var(--text-soft); font-size: var(--fs-sm); }
+.chip[aria-pressed='true'], .chip.active { border-color: #496ca9; background: var(--accent-soft); color: #cbdcff; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.badge { display: inline-block; border-radius: 6px; background: var(--surface-raised); padding: 1px 8px; color: var(--muted); font-size: var(--fs-xs); }
+.badge.income { background: rgba(79,196,181,.12); color: var(--income); }
+.badge.expense { background: rgba(240,113,120,.12); color: var(--expense); }
+.badge.warning { background: rgba(217,164,65,.14); color: var(--warning); }
+
+.field { display: grid; gap: 4px; color: var(--muted); font-size: var(--fs-sm); }
+.field input, .field select, .field textarea, .input { min-height: 38px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-soft); padding: 7px 10px; color: var(--text); font-size: var(--fs-md); }
+.field input:focus, .field select:focus, .input:focus { border-color: var(--accent); outline: 2px solid var(--accent-soft); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.toolbar .grow { flex: 1 1 220px; }
+
+.month-nav { display: inline-flex; align-items: center; gap: 6px; }
+.month-nav strong { min-width: 150px; text-align: center; font-size: var(--fs-lg); font-weight: 600; }
+.month-nav strong::first-letter { text-transform: uppercase; }
+
+.money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.empty { display: grid; place-items: center; gap: 6px; padding: 36px 16px; color: var(--muted); text-align: center; }
+
+.chart { width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--muted); font-size: 12px; }
+.chart .grid { stroke: var(--border); stroke-width: 1; }
+.chart .axis-zero { stroke: var(--border-strong); stroke-width: 1; }
+.chart-tooltip { position: absolute; z-index: 5; min-width: 180px; max-width: 280px; pointer-events: none; border: 1px solid var(--border-strong); border-radius: 10px; background: #0b0d10f2; padding: 10px 12px; font-size: var(--fs-sm); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+
+@media (max-width: 900px) {
+  .page { padding: 20px 16px 96px; }
+  .grid-2, .grid-3, .grid-main-side { grid-template-columns: 1fr; }
+}

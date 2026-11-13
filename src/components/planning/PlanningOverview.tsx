@@ -1,45 +1,20 @@
 import type { FinancialItem } from '../../types/finance'
-import { today } from '../../utils/date'
-import { summarizePlanning } from '../../utils/planning'
-import { CurrencyAmount, type CurrencyTone } from '../shared/CurrencyAmount'
+import { formatCurrency } from '../../utils/currency'
+import { monthLabel, summarizePlanning } from '../../utils/planning'
 
-function balanceTone(value: number): CurrencyTone {
-  if (value > 0) return 'positive'
-  if (value < 0) return 'negative'
-  return 'neutral'
-}
-
-function balanceLabel(value: number): string {
-  if (value > 0) return 'Saldo positivo'
-  if (value < 0) return 'Saldo negativo'
-  return 'Saldo zerado'
-}
-
-export function PlanningOverview({ items }: { items: FinancialItem[] }) {
-  const summary = summarizePlanning(items, today())
+export function PlanningOverview({ items, month }: { items: FinancialItem[]; month: string }) {
+  const summary = summarizePlanning(items, month)
+  const label = monthLabel(month)
 
   return (
-    <section className="planning-overview" aria-label="Resumo da base planejada">
-      <article className="metric-card planning-overview-card income">
-        <span>Ganhos fixos mensais</span>
-        <CurrencyAmount value={summary.recurringIncome} tone="income" />
-        <small>ativos no mês atual</small>
-      </article>
-      <article className="metric-card planning-overview-card expense">
-        <span>Gastos fixos mensais</span>
-        <CurrencyAmount value={summary.recurringExpenses} tone="expense" />
-        <small>ativos no mês atual</small>
-      </article>
-      <article className={`metric-card planning-overview-card balance balance-${balanceTone(summary.recurringBalance)}`}>
-        <div className="metric-card-label"><span>Saldo da base fixa</span><em>{balanceLabel(summary.recurringBalance)}</em></div>
-        <CurrencyAmount value={summary.recurringBalance} tone={balanceTone(summary.recurringBalance)} />
-        <small>antes dos itens únicos</small>
-      </article>
-      <article className="metric-card planning-overview-card one-time">
-        <span>Itens únicos futuros</span>
-        <strong className="planning-count-value">{summary.upcomingOneTimeCount}</strong>
-        <small>aguardando acontecer</small>
-      </article>
+    <section aria-label={`Resumo de ${label}`}>
+      <p className="muted pl-summary-title">Em {label}</p>
+      <div className="stats">
+        <div className="stat is-income"><span>Ganhos fixos</span><strong className="money">{formatCurrency(summary.recurringIncome)}</strong></div>
+        <div className="stat is-expense"><span>Gastos fixos</span><strong className="money">{formatCurrency(summary.recurringExpenses)}</strong></div>
+        <div className="stat"><span>Sobra dos fixos</span><strong className={`money ${summary.recurringBalance < 0 ? 'is-expense' : ''}`}>{formatCurrency(summary.recurringBalance)}</strong></div>
+        <div className="stat"><span>Itens de uma vez</span><strong>{summary.oneTimeCount}</strong><small>com data neste mês</small></div>
+      </div>
     </section>
   )
 }

@@ -1,146 +1,59 @@
 import type {
+  CreditCard,
+  CreditCardDraft,
   FinanceData,
   FinancialItem,
   FinancialItemDraft,
-  Investment,
-  InvestmentDraft,
+  OccurrenceRecord,
   OccurrenceStatus,
+  OpeningBalance,
 } from '../types/finance'
+import { canonicalCategory } from './category'
+import { amountAt } from './recurrence'
 
 interface Identity {
   id: string
   timestamp: string
 }
 
-export interface MutationResult {
-  data: FinanceData
-  scheduleChanged?: boolean
-}
-
 export function addFinancialItem(data: FinanceData, draft: FinancialItemDraft, identity: Identity): FinanceData {
-  const item = itemFromDraft(draft, identity.id, identity.timestamp, identity.timestamp)
-  const items = data.items.map((existing) =>
-    draft.investmentId && existing.investmentId === draft.investmentId
-      ? { ...existing, investmentId: undefined }
-      : existing,
-  )
-  const investments = data.investments.map((investment) =>
-    investment.id === draft.investmentId
-      ? { ...investment, linkedFinancialItemId: item.id, monthlyContribution: item.amount, updatedAt: identity.timestamp }
-      : investment,
-  )
-  return { ...data, items: [...items, item], investments }
+  const item = itemFromDraft(normalizeDraft(data, draft), identity.id, identity.timestamp, identity.timestamp)
+  return { ...data, items: [...data.items, item] }
 }
 
 export function updateFinancialItem(
   data: FinanceData,
   id: string,
-  draft: FinancialItemDraft,
+  rawDraft: FinancialItemDraft,
   timestamp: string,
-): MutationResult | null {
+  options: { amountFrom?: string } = {},
+): FinanceData | null {
   const current = data.items.find((item) => item.id === id)
   if (!current) return null
+  const draft = normalizeDraft(data, rawDraft)
   const updated = itemFromDraft(draft, current.id, current.createdAt, timestamp)
-  const scheduleChanged = scheduleSignature(current) !== scheduleSignature(updated)
-  const items = data.items
-    .map((item) => item.id === id ? updated : item)
-    .map((item) => draft.investmentId && item.id !== id && item.investmentId === draft.investmentId
-      ? { ...item, investmentId: undefined }
-      : item)
-  const investments = data.investments.map((investment) => {
-    if (investment.id === draft.investmentId) {
-      return { ...investment, linkedFinancialItemId: id, monthlyContribution: draft.amount, updatedAt: timestamp }
+
+  const { amountFrom } = options
+  if (amountFrom && current.kind === 'recurring' && updated.kind === 'recurring') {
+    // Future-only change: keep the base amount, so past months keep their value.
+    updated.amount = current.amount
+    if (current.amountChanges) updated.amountChanges = current.amountChanges
+    if (draft.amount !== amountAt(current, amountFrom)) {
+      updated.amountChanges = [
+        ...(current.amountChanges ?? []).filter((change) => change.from !== amountFrom),
+        { from: amountFrom, amount: draft.amount },
+      ].sort((first, second) => first.from.localeCompare(second.from))
     }
-    if (investment.id === current.investmentId && current.investmentId !== draft.investmentId) {
-      return { ...investment, linkedFinancialItemId: undefined, updatedAt: timestamp }
-    }
-    return investment
-  })
-  return {
-    scheduleChanged,
-    data: {
-      ...data,
-      items,
-      investments,
-      occurrenceRecords: scheduleChanged
-        ? data.occurrenceRecords.filter((record) => !record.key.startsWith(`${id}:`))
-        : data.occurrenceRecords,
-    },
   }
+
+  return { ...data, items: data.items.map((item) => item.id === id ? updated : item) }
 }
 
-export function deleteFinancialItem(data: FinanceData, id: string, timestamp: string): FinanceData {
+export function deleteFinancialItem(data: FinanceData, id: string): FinanceData {
   return {
     ...data,
     items: data.items.filter((item) => item.id !== id),
-    investments: data.investments.map((investment) => investment.linkedFinancialItemId === id
-      ? { ...investment, linkedFinancialItemId: undefined, updatedAt: timestamp }
-      : investment),
     occurrenceRecords: data.occurrenceRecords.filter((record) => !record.key.startsWith(`${id}:`)),
-  }
-}
-
-export function addPortfolioInvestment(
-  data: FinanceData,
-  draft: InvestmentDraft,
-  investmentIdentity: Identity,
-  linkedItemId: string,
-): FinanceData {
-  const linkedItem = draft.createPlannedExpense && draft.monthlyContribution > 0
-    ? createInvestmentItem(draft, investmentIdentity.id, linkedItemId, investmentIdentity.timestamp)
-    : null
-  const investment = investmentFromDraft(
-    draft,
-    investmentIdentity.id,
-    investmentIdentity.timestamp,
-    investmentIdentity.timestamp,
-    linkedItem?.id,
-  )
-  return {
-    ...data,
-    investments: [...data.investments, investment],
-    items: linkedItem ? [...data.items, linkedItem] : data.items,
-  }
-}
-
-export function updatePortfolioInvestment(
-  data: FinanceData,
-  id: string,
-  draft: InvestmentDraft,
-  linkedItemId: string,
-  timestamp: string,
-): FinanceData | null {
-  const current = data.investments.find((investment) => investment.id === id)
-  if (!current) return null
-  const currentLinkedItem = data.items.find((item) => item.id === current.linkedFinancialItemId)
-  const shouldLink = draft.createPlannedExpense && draft.monthlyContribution > 0
-  const linkedItem = shouldLink
-    ? currentLinkedItem
-      ? updateInvestmentItem(currentLinkedItem, draft, id, timestamp)
-      : createInvestmentItem(draft, id, linkedItemId, timestamp)
-    : null
-  const investment = investmentFromDraft(draft, current.id, current.createdAt, timestamp, linkedItem?.id)
-  const itemsWithoutOldLink = data.items
-    .filter((item) => item.id !== currentLinkedItem?.id)
-    .map((item) => item.investmentId === id ? { ...item, investmentId: undefined } : item)
-  const scheduleChanged = currentLinkedItem && (
-    !linkedItem || scheduleSignature(currentLinkedItem) !== scheduleSignature(linkedItem)
-  )
-  return {
-    ...data,
-    investments: data.investments.map((item) => item.id === id ? investment : item),
-    items: linkedItem ? [...itemsWithoutOldLink, linkedItem] : itemsWithoutOldLink,
-    occurrenceRecords: scheduleChanged
-      ? data.occurrenceRecords.filter((record) => !record.key.startsWith(`${currentLinkedItem.id}:`))
-      : data.occurrenceRecords,
-  }
-}
-
-export function deletePortfolioInvestment(data: FinanceData, id: string): FinanceData {
-  return {
-    ...data,
-    investments: data.investments.filter((investment) => investment.id !== id),
-    items: data.items.map((item) => item.investmentId === id ? { ...item, investmentId: undefined } : item),
   }
 }
 
@@ -149,9 +62,71 @@ export function changeOccurrenceStatus(
   key: string,
   status: OccurrenceStatus,
   confirmedAt: string,
+  details: { amount?: number; paidDate?: string } = {},
 ): FinanceData {
-  const record = { key, status, ...(status === 'completed' ? { confirmedAt } : {}) }
-  return { ...data, occurrenceRecords: [...data.occurrenceRecords.filter((item) => item.key !== key), record] }
+  const others = data.occurrenceRecords.filter((item) => item.key !== key)
+  if (status === 'planned') return { ...data, occurrenceRecords: others }
+  const record: OccurrenceRecord = status === 'completed'
+    ? {
+        key,
+        status,
+        confirmedAt,
+        ...(details.amount !== undefined ? { amount: details.amount } : {}),
+        ...(details.paidDate ? { paidDate: details.paidDate } : {}),
+      }
+    : { key, status }
+  return { ...data, occurrenceRecords: [...others, record] }
+}
+
+export function setOpeningBalance(data: FinanceData, value: OpeningBalance | null): FinanceData {
+  const next = { ...data }
+  if (value) next.openingBalance = value
+  else delete next.openingBalance
+  return next
+}
+
+export function addCard(data: FinanceData, draft: CreditCardDraft, identity: Identity): FinanceData {
+  return { ...data, cards: [...data.cards, cardFromDraft(draft, identity.id, identity.timestamp, identity.timestamp)] }
+}
+
+export function updateCard(data: FinanceData, id: string, draft: CreditCardDraft, timestamp: string): FinanceData | null {
+  const current = data.cards.find((card) => card.id === id)
+  if (!current) return null
+  return { ...data, cards: data.cards.map((card) => card.id === id ? cardFromDraft(draft, id, current.createdAt, timestamp) : card) }
+}
+
+/** Purchases stay as common expenses (installments included); the invoice records of the card go away. */
+export function deleteCard(data: FinanceData, id: string): FinanceData {
+  return {
+    ...data,
+    cards: data.cards.filter((card) => card.id !== id),
+    items: data.items.map((item) => {
+      if (item.cardId !== id) return item
+      const rest = { ...item }
+      delete rest.cardId
+      return rest
+    }),
+    occurrenceRecords: data.occurrenceRecords.filter((record) => !record.key.startsWith(`card:${id}:`)),
+  }
+}
+
+function cardFromDraft(draft: CreditCardDraft, id: string, createdAt: string, updatedAt: string): CreditCard {
+  return {
+    id,
+    createdAt,
+    updatedAt,
+    name: draft.name.trim(),
+    dueDay: draft.dueDay,
+    ...(draft.limit ? { limit: draft.limit } : {}),
+  }
+}
+
+/** Category spelling is unified; installments only make sense on a one-time expense; only expenses use a card. */
+function normalizeDraft(data: FinanceData, draft: FinancialItemDraft): FinancialItemDraft {
+  const category = canonicalCategory(draft.category, data.items.map((item) => item.category))
+  const { installments, cardId, ...rest } = draft
+  const split = draft.type === 'expense' && draft.kind === 'one-time' && installments && installments > 1
+  return { ...rest, category, ...(split ? { installments } : {}), ...(draft.type === 'expense' && cardId ? { cardId } : {}) }
 }
 
 function itemFromDraft(
@@ -170,7 +145,8 @@ function itemFromDraft(
     amount: draft.amount,
     category: draft.category.trim(),
     ...(draft.notes?.trim() ? { notes: draft.notes.trim() } : {}),
-    ...(draft.investmentId ? { investmentId: draft.investmentId } : {}),
+    ...(draft.cardId ? { cardId: draft.cardId } : {}),
+    ...(draft.installments ? { installments: draft.installments } : {}),
     ...(draft.kind === 'recurring'
       ? { recurrence: {
           dayOfMonth: draft.dayOfMonth ?? 1,
@@ -180,82 +156,4 @@ function itemFromDraft(
         } }
       : { dueDate: draft.dueDate }),
   }
-}
-
-function investmentFromDraft(
-  draft: InvestmentDraft,
-  id: string,
-  createdAt: string,
-  updatedAt: string,
-  linkedFinancialItemId?: string,
-): Investment {
-  return {
-    id,
-    createdAt,
-    updatedAt,
-    name: draft.name.trim(),
-    institution: draft.institution.trim(),
-    currentBalance: draft.currentBalance,
-    balanceDate: draft.balanceDate,
-    annualRateBps: draft.annualRateBps,
-    monthlyContribution: draft.monthlyContribution,
-    contributionDay: draft.contributionDay,
-    ...(linkedFinancialItemId ? { linkedFinancialItemId } : {}),
-  }
-}
-
-function createInvestmentItem(
-  draft: InvestmentDraft,
-  investmentId: string,
-  id: string,
-  timestamp: string,
-): FinancialItem {
-  return {
-    id,
-    title: `Aporte · ${draft.name.trim()}`,
-    type: 'expense',
-    kind: 'recurring',
-    amount: draft.monthlyContribution,
-    category: 'Investimentos',
-    investmentId,
-    recurrence: { dayOfMonth: draft.contributionDay, startMonth: draft.balanceDate.slice(0, 7), active: true },
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  }
-}
-
-function updateInvestmentItem(
-  item: FinancialItem,
-  draft: InvestmentDraft,
-  investmentId: string,
-  timestamp: string,
-): FinancialItem {
-  return {
-    ...item,
-    title: `Aporte · ${draft.name.trim()}`,
-    amount: draft.monthlyContribution,
-    category: 'Investimentos',
-    investmentId,
-    recurrence: {
-      dayOfMonth: draft.contributionDay,
-      startMonth: item.recurrence?.startMonth ?? draft.balanceDate.slice(0, 7),
-      active: true,
-    },
-    dueDate: undefined,
-    type: 'expense',
-    kind: 'recurring',
-    updatedAt: timestamp,
-  }
-}
-
-function scheduleSignature(item: FinancialItem): string {
-  return JSON.stringify({
-    kind: item.kind,
-    dueDate: item.dueDate,
-    recurrence: item.recurrence && {
-      dayOfMonth: item.recurrence.dayOfMonth,
-      startMonth: item.recurrence.startMonth,
-      endMonth: item.recurrence.endMonth,
-    },
-  })
 }

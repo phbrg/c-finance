@@ -1,19 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { parseFinanceBackup } from '../services/financeBackupService'
-import { emptyFinanceData, loadFinanceData, saveFinanceData } from '../services/financeStorage'
-import type { FinanceData, FinancialItemDraft, InvestmentDraft, OccurrenceStatus } from '../types/finance'
+import { emptyFinanceData, FINANCE_STORAGE_KEY, loadFinanceData, saveFinanceData } from '../services/financeStorage'
+import type { CreditCardDraft, FinanceData, FinancialItemDraft, OccurrenceStatus, OpeningBalance } from '../types/finance'
 import {
+  addCard,
   addFinancialItem,
-  addPortfolioInvestment,
   changeOccurrenceStatus,
+  deleteCard,
   deleteFinancialItem,
-  deletePortfolioInvestment,
+  setOpeningBalance,
+  updateCard,
   updateFinancialItem,
-  updatePortfolioInvestment,
 } from '../utils/financeMutations'
-import { generateOccurrences } from '../utils/recurrence'
 
-function initialState(): { data: FinanceData; error: string | null } {
+type State = { data: FinanceData; error: string | null }
+
+// On corrupted data the error stays and the stored text is untouched (loadFinanceData already kept a copy).
+function initialState(): State {
   try {
     return { data: loadFinanceData(), error: null }
   } catch (error: unknown) {
@@ -21,115 +24,98 @@ function initialState(): { data: FinanceData; error: string | null } {
   }
 }
 
+const errorText = (error: unknown, fallback = 'Erro inesperado.') => error instanceof Error ? error.message : fallback
+const now = () => new Date().toISOString()
+const newId = () => crypto.randomUUID()
+
 export function useFinance() {
   const [state, setState] = useState(initialState)
+  // Latest saved data. Several calls in the same click (confirm all selected) must build on each other,
+  // not on the data of the render they were created in.
+  const latest = useRef(state.data)
   const [message, setMessage] = useState<string | null>(null)
 
-  const commit = (data: FinanceData, successMessage: string): boolean => {
+  // Another tab saved: reload so this one does not overwrite it with stale data.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== FINANCE_STORAGE_KEY && event.key !== null) return
+      const reloaded = initialState()
+      latest.current = reloaded.data
+      setState(reloaded)
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
+  const fail = (text: string) => {
+    setState((current) => ({ ...current, error: text }))
+    return false
+  }
+
+  const commit = (data: FinanceData | null, successMessage: string, notFound = 'Não encontrei esse item.'): boolean => {
+    if (!data) return fail(notFound)
     try {
       saveFinanceData(data)
+      latest.current = data
       setState({ data, error: null })
       setMessage(successMessage)
       return true
     } catch (error: unknown) {
-      setState((current) => ({ ...current, error: error instanceof Error ? error.message : 'Erro inesperado.' }))
-      return false
-    }
-  }
-
-  const addItem = (draft: FinancialItemDraft): boolean => commit(
-    addFinancialItem(state.data, draft, { id: crypto.randomUUID(), timestamp: new Date().toISOString() }),
-    draft.investmentId ? 'Aporte adicionado e vinculado ao investimento.' : 'Item adicionado ao planejamento.',
-  )
-
-  const updateItem = (id: string, draft: FinancialItemDraft): boolean => {
-    const result = updateFinancialItem(state.data, id, draft, new Date().toISOString())
-    if (!result) {
-      setState((current) => ({ ...current, error: 'O item que você tentou editar não foi encontrado.' }))
-      return false
-    }
-    return commit(
-      result.data,
-      result.scheduleChanged
-        ? 'Item atualizado. As confirmações anteriores foram reiniciadas porque as datas mudaram.'
-        : 'Item atualizado com sucesso.',
-    )
-  }
-
-  const deleteItem = (id: string): void => {
-    commit(deleteFinancialItem(state.data, id, new Date().toISOString()), 'Item excluído.')
-  }
-
-  const addInvestment = (draft: InvestmentDraft): boolean => commit(
-    addPortfolioInvestment(
-      state.data,
-      draft,
-      { id: crypto.randomUUID(), timestamp: new Date().toISOString() },
-      crypto.randomUUID(),
-    ),
-    draft.createPlannedExpense && draft.monthlyContribution > 0
-      ? 'Investimento criado e aporte adicionado ao planejamento.'
-      : 'Investimento adicionado à carteira.',
-  )
-
-  const updateInvestment = (id: string, draft: InvestmentDraft): boolean => {
-    const updated = updatePortfolioInvestment(
-      state.data,
-      id,
-      draft,
-      crypto.randomUUID(),
-      new Date().toISOString(),
-    )
-    return updated ? commit(updated, 'Investimento atualizado com sucesso.') : false
-  }
-
-  const deleteInvestment = (id: string): void => {
-    commit(
-      deletePortfolioInvestment(state.data, id),
-      'Investimento removido. O gasto planejado foi mantido e apenas desvinculado.',
-    )
-  }
-
-  const completeWelcome = (): boolean => commit(
-    { ...state.data, welcomeCompleted: true },
-    'Bem-vindo ao c-finance.',
-  )
-
-  const setOccurrenceStatus = (key: string, status: OccurrenceStatus): void => {
-    commit(
-      changeOccurrenceStatus(state.data, key, status, new Date().toISOString()),
-      status === 'completed' ? 'Movimentação confirmada.' : 'Situação atualizada.',
-    )
-  }
-
-  const importBackup = (content: string): boolean => {
-    try {
-      return commit({ ...parseFinanceBackup(content), welcomeCompleted: true }, 'Backup importado com sucesso.')
-    } catch (error: unknown) {
-      setState((current) => ({ ...current, error: error instanceof Error ? error.message : 'Backup inválido.' }))
-      return false
+      return fail(errorText(error))
     }
   }
 
   return {
     data: state.data,
-    items: state.data.items,
-    investments: state.data.investments,
     error: state.error,
     message,
-    addItem,
-    updateItem,
-    deleteItem,
-    addInvestment,
-    updateInvestment,
-    deleteInvestment,
-    completeWelcome,
-    setOccurrenceStatus,
-    importBackup,
-    occurrencesForMonth: (month: string) => generateOccurrences(state.data.items, state.data.occurrenceRecords, month),
     clearFeedback: () => {
       setState((current) => ({ ...current, error: null }))
       setMessage(null)
+    },
+    addItem: (draft: FinancialItemDraft) => commit(
+      addFinancialItem(latest.current, draft, { id: newId(), timestamp: now() }),
+      'Lançamento adicionado.',
+    ),
+    updateItem: (id: string, draft: FinancialItemDraft, options?: { amountFrom?: string }) => commit(
+      updateFinancialItem(latest.current, id, draft, now(), options),
+      'Lançamento atualizado.',
+    ),
+    deleteItem: (id: string): void => {
+      commit(deleteFinancialItem(latest.current, id), 'Lançamento excluído.')
+    },
+    setOccurrenceStatus: (
+      key: string,
+      status: OccurrenceStatus,
+      details?: { amount?: number; paidDate?: string },
+    ): void => {
+      commit(
+        changeOccurrenceStatus(latest.current, key, status, now(), details),
+        status === 'completed' ? 'Marcado como feito.' : status === 'skipped' ? 'Marcado como ignorado.' : 'Voltou para pendente.',
+      )
+    },
+    addCard: (draft: CreditCardDraft) => commit(
+      addCard(latest.current, draft, { id: newId(), timestamp: now() }),
+      'Cartão adicionado.',
+    ),
+    updateCard: (id: string, draft: CreditCardDraft) => commit(
+      updateCard(latest.current, id, draft, now()),
+      'Cartão atualizado.',
+      'Não encontrei esse cartão.',
+    ),
+    deleteCard: (id: string): void => {
+      commit(deleteCard(latest.current, id), 'Cartão excluído. As compras viraram gastos comuns.')
+    },
+    setOpeningBalance: (value: OpeningBalance | null): void => {
+      commit(setOpeningBalance(latest.current, value), value ? 'Saldo inicial salvo.' : 'Saldo inicial removido.')
+    },
+    completeWelcome: () => commit({ ...latest.current, welcomeCompleted: true }, 'Tudo pronto.'),
+    importBackup: (content: string): boolean => {
+      try {
+        return commit({ ...parseFinanceBackup(content), welcomeCompleted: true }, 'Backup importado.')
+      } catch (error: unknown) {
+        return fail(errorText(error, 'Backup inválido.'))
+      }
     },
   }
 }

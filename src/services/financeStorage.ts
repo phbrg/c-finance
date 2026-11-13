@@ -5,13 +5,14 @@ import type { FinanceData, FinancialItem, OccurrenceRecord } from '../types/fina
 import type { LegacyTransaction } from '../schemas/legacyTransactionSchema'
 
 export const FINANCE_STORAGE_KEY = 'c-finance:data:v2'
+const LAST_BACKUP_KEY = 'c-finance:last-backup'
 const LEGACY_TRANSACTION_KEYS = [
   'c-finance:transactions:v1',
   'financeiro-local:transactions:v1',
 ]
 
 export function emptyFinanceData(): FinanceData {
-  return { version: 3, welcomeCompleted: false, items: [], occurrenceRecords: [], investments: [] }
+  return { version: 5, welcomeCompleted: false, items: [], occurrenceRecords: [], cards: [] }
 }
 
 function storage(): Storage {
@@ -21,10 +22,39 @@ function storage(): Storage {
   return window.localStorage
 }
 
+function hasKeyWithPrefix(prefix: string): boolean {
+  const store = storage()
+  return Array.from({ length: store.length }, (_, index) => store.key(index)).some((key) => key?.startsWith(prefix))
+}
+
 export function loadFinanceData(): FinanceData {
   try {
     const current = storage().getItem(FINANCE_STORAGE_KEY)
-    if (current) return parseFinanceData(JSON.parse(current))
+    if (current) {
+      try {
+        const raw: unknown = JSON.parse(current)
+        const data = parseFinanceData(raw)
+        // v5 drops cards and investments: keep the untouched text before the first save rewrites it.
+        const version = (raw as { version?: unknown } | null)?.version
+        if (typeof version === 'number' && version < 5 && !hasKeyWithPrefix(`${FINANCE_STORAGE_KEY}:pre-v5-`)) {
+          // One copy only: until the first save the old data stays in place and every load would add another.
+          try { storage().setItem(`${FINANCE_STORAGE_KEY}:pre-v5-${Date.now()}`, current) } catch { /* storage full: migration still works */ }
+        }
+        return data
+      } catch (error: unknown) {
+        if (!(error instanceof SyntaxError || error instanceof z.ZodError)) throw error
+        const copyKey = `${FINANCE_STORAGE_KEY}:corrupt-${Date.now()}`
+        let saved = false
+        try {
+          storage().setItem(copyKey, current)
+          saved = true
+        } catch { /* storage full: the error below just omits the copy note */ }
+        throw new Error(
+          `Os dados locais estão corrompidos ou são incompatíveis.${saved ? ` Uma cópia foi guardada em "${copyKey}".` : ''}`,
+          { cause: error },
+        )
+      }
+    }
 
     for (const key of LEGACY_TRANSACTION_KEYS) {
       const legacy = storage().getItem(key)
@@ -37,6 +67,20 @@ export function loadFinanceData(): FinanceData {
     }
     throw error instanceof Error ? error : new Error('Não foi possível carregar os dados.')
   }
+}
+
+export function getLastBackupAt(): string | null {
+  try {
+    return storage().getItem(LAST_BACKUP_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function markBackupDone(): void {
+  try {
+    storage().setItem(LAST_BACKUP_KEY, new Date().toISOString())
+  } catch { /* the backup file was already downloaded; the reminder date is optional */ }
 }
 
 export function saveFinanceData(data: FinanceData): void {
@@ -66,8 +110,8 @@ export function migrateTransactions(transactions: LegacyTransaction[]): FinanceD
     updatedAt: transaction.updatedAt,
   }))
   const occurrenceRecords: OccurrenceRecord[] = transactions.map((transaction) => ({
-    key: `${transaction.id}:${transaction.paymentDate}`,
+    key: `${transaction.id}:${transaction.paymentDate.slice(0, 7)}`,
     status: 'completed',
   }))
-  return { version: 3, welcomeCompleted: true, items, occurrenceRecords, investments: [] }
+  return { version: 5, welcomeCompleted: true, items, occurrenceRecords, cards: [] }
 }

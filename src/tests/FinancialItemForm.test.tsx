@@ -1,49 +1,72 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { FinancialItemForm } from '../components/planning/FinancialItemForm'
-import type { FinancialItem } from '../types/finance'
+
+function fill(title: string, amount: string, category: string) {
+  fireEvent.change(screen.getByLabelText('Título'), { target: { value: title } })
+  fireEvent.change(screen.getByLabelText(/^Valor/), { target: { value: amount } })
+  fireEvent.change(screen.getByLabelText('Categoria'), { target: { value: category } })
+}
 
 describe('FinancialItemForm', () => {
-  it('keeps the last submitted financial type selected', () => {
+  it('keeps the last submitted type selected', () => {
     const onSubmit = vi.fn(() => true)
     render(<FinancialItemForm onSubmit={onSubmit} />)
-
     fireEvent.click(screen.getByRole('button', { name: 'Ganho' }))
-    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Salary' } })
-    fireEvent.change(screen.getByRole('textbox', { name: 'Valor R$' }), { target: { value: '5000,00' } })
-    fireEvent.change(screen.getByLabelText('Categoria'), { target: { value: 'Income' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Adicionar item' }))
+    fill('Salário', '5000,00', 'Renda')
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar' }))
 
     expect(onSubmit).toHaveBeenCalledOnce()
     expect(screen.getByRole('button', { name: 'Ganho' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('loads an existing item and submits its edited values', () => {
-    const item: FinancialItem = {
-      id: 'rent',
-      title: 'Rent',
-      type: 'expense',
-      kind: 'recurring',
-      amount: 180_000,
-      category: 'Home',
-      recurrence: { dayOfMonth: 10, startMonth: '2026-01', endMonth: '2026-12', active: true },
-      createdAt: '2026-01-01T12:00:00.000Z',
-      updatedAt: '2026-01-01T12:00:00.000Z',
-    }
+  it('suggests existing categories', () => {
+    const { container } = render(<FinancialItemForm onSubmit={vi.fn()} categorySuggestions={['Moradia', 'Mercado']} />)
+    expect([...container.querySelectorAll('datalist option')].map((option) => option.getAttribute('value'))).toEqual(['Moradia', 'Mercado'])
+  })
+
+  it('splits a one-time expense into installments of the total', () => {
     const onSubmit = vi.fn(() => true)
-    render(<FinancialItemForm editingItem={item} onSubmit={onSubmit} onCancel={vi.fn()} />)
+    render(<FinancialItemForm onSubmit={onSubmit} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Uma vez' }))
+    fill('Geladeira', '3000,00', 'Casa')
+    fireEvent.change(screen.getByLabelText(/^Parcelas/), { target: { value: '3' } })
 
-    expect(screen.getByRole('heading', { name: 'Rent' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Termina em opcional')).toHaveValue('2026-12')
-    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'New rent' } })
-    fireEvent.change(screen.getByRole('textbox', { name: 'Valor R$' }), { target: { value: '1900,00' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+    expect(screen.getByLabelText(/^Valor total/)).toBeInTheDocument()
+    expect(screen.getByText(/3x de/)).toHaveTextContent(/1\.000,00/)
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar' }))
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ amount: 300_000, installments: 3, kind: 'one-time' }), undefined)
+  })
 
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'New rent',
-      amount: 190_000,
-      dayOfMonth: 10,
-      endMonth: '2026-12',
-    }))
+  it('offers installments only for one-time expenses', () => {
+    render(<FinancialItemForm onSubmit={vi.fn()} />)
+    expect(screen.queryByLabelText(/^Parcelas/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Uma vez' }))
+    expect(screen.getByLabelText(/^Parcelas/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Ganho' }))
+    expect(screen.queryByLabelText(/^Parcelas/)).not.toBeInTheDocument()
+  })
+
+  it('lets an expense be paid with a card, and keeps installments', () => {
+    const onSubmit = vi.fn(() => true)
+    const cards = [{ id: 'c1', name: 'Nubank', closingDay: 5, dueDay: 12, createdAt: '', updatedAt: '' }]
+    render(<FinancialItemForm onSubmit={onSubmit} cards={cards} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Uma vez' }))
+    fill('TV', '2000,00', 'Casa')
+    fireEvent.change(screen.getByLabelText('Pago com'), { target: { value: 'c1' } })
+    fireEvent.change(screen.getByLabelText(/^Parcelas/), { target: { value: '4' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar' }))
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ cardId: 'c1', installments: 4 }), undefined)
+  })
+
+  it('hides Pago com without cards or for income', () => {
+    const cards = [{ id: 'c1', name: 'Nubank', closingDay: 5, dueDay: 12, createdAt: '', updatedAt: '' }]
+    const { unmount } = render(<FinancialItemForm onSubmit={vi.fn()} />)
+    expect(screen.queryByLabelText('Pago com')).not.toBeInTheDocument()
+    unmount()
+    render(<FinancialItemForm onSubmit={vi.fn()} cards={cards} />)
+    expect(screen.getByLabelText('Pago com')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Ganho' }))
+    expect(screen.queryByLabelText('Pago com')).not.toBeInTheDocument()
   })
 })

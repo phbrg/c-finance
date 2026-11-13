@@ -1,0 +1,28 @@
+.app-layout { min-height: 100vh; background: var(--canvas); }
+.app-workspace { min-height: 100vh; margin-left: 220px; }
+
+.app-nav { position: fixed; inset: 0 auto 0 0; z-index: 20; display: flex; width: 220px; flex-direction: column; gap: 4px; border-right: 1px solid var(--border); background: var(--sidebar); padding: 24px 14px; }
+.app-brand { padding: 0 10px 20px; font-size: var(--fs-lg); font-weight: 600; letter-spacing: -.03em; }
+.app-nav a { display: flex; align-items: center; gap: 12px; border-radius: var(--radius-sm); padding: 10px 12px; color: var(--muted); font-size: var(--fs-md); font-weight: 560; text-decoration: none; }
+.app-nav a:hover { background: var(--surface); color: var(--text-soft); }
+.app-nav a[aria-current='page'] { background: var(--accent-soft); color: #cbdcff; }
+.app-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.app-nav a[href='#/ajuda'] { margin-top: auto; }
+.app-nav svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+.toast { position: fixed; z-index: 80; top: 16px; right: 20px; display: flex; max-width: 420px; align-items: center; gap: 12px; border: 1px solid; border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--fs-sm); box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+.toast.success { border-color: #1e4c78; background: #10243a; color: #b5d5ff; }
+.toast.error { border-color: #793044; background: #32151e; color: #fecdd3; }
+.toast button { margin-left: auto; border: 0; background: transparent; color: inherit; font-size: 18px; }
+
+@media (max-width: 900px) {
+  .app-workspace { margin-left: 0; }
+  .app-nav { inset: auto 0 0 0; width: auto; flex-direction: row; gap: 2px; border-top: 1px solid var(--border); border-right: 0; background: rgba(13,16,21,.97); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
+  .app-brand { display: none; }
+  .app-nav a { min-width: 0; flex: 1; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 2px; font-size: var(--fs-xs); }
+  .app-nav a[href='#/ajuda'] { margin-top: 0; }
+  .toast { top: 12px; right: 12px; left: 12px; }
+}
+
+.form-error { margin: 8px 0 0; color: var(--expense); font-size: var(--fs-sm); }
+:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }

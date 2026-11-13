@@ -1,0 +1,31 @@
+/* capped: wider FAQ rows get hard to scan on big screens */
+.help-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); align-items: start; gap: var(--gap); max-width: 1240px; }
+.help-side { display: grid; gap: var(--gap); }
+@media (max-width: 1100px) { .help-grid { grid-template-columns: 1fr; } }
+
+.help-faq { display: grid; gap: 22px; }
+.help-section h2 { margin: 0 0 6px; color: var(--muted); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.help-section details { border-top: 1px solid var(--border); }
+.help-section details:last-child { border-bottom: 1px solid var(--border); }
+.help-section summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 -10px; border-radius: var(--radius-sm); padding: 12px 10px; color: var(--text); font-size: var(--fs-md); font-weight: 560; cursor: pointer; list-style: none; transition: background .15s; }
+.help-section summary::-webkit-details-marker { display: none; }
+.help-section summary:hover { background: var(--surface-raised); }
+.help-section summary:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: -2px; }
+.help-section summary svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s; }
+.help-section details[open] summary svg { transform: rotate(180deg); stroke: var(--accent-strong); }
+.help-section details p { max-width: 68ch; margin: 0; padding: 0 0 14px; color: var(--text-soft); }
+
+.help-side p { margin: 0 0 14px; }
+.help-steps { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.help-steps a { display: flex; align-items: center; gap: 12px; margin: 0 -10px; border-radius: var(--radius-sm); padding: 10px; color: var(--text); text-decoration: none; transition: background .15s; }
+.help-steps a:hover { background: var(--surface-raised); }
+.help-steps a:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: -2px; }
+.help-step-num { display: grid; flex: none; width: 28px; height: 28px; place-items: center; border: 1px solid #36507f; border-radius: 999px; background: var(--accent-soft); color: #cbdcff; font-size: var(--fs-sm); font-weight: 640; }
+.help-step-text { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.help-step-text strong { font-weight: 560; }
+.help-step-text small { color: var(--muted); font-size: var(--fs-sm); }
+.help-steps svg { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.help-steps a:hover svg { stroke: var(--accent-strong); }
+.help-github { gap: 8px; color: var(--text); text-decoration: none; }
+.help-github svg { flex: none; }
+@media (prefers-reduced-motion: reduce) { .help-section summary svg { transition: none; } }

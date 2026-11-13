@@ -2,22 +2,21 @@
 
 O **[c-finance](https://zen-type-tau.vercel.app/)** nasceu de uma necessidade bem prática: substituir a planilha que eu usava para organizar ganhos e gastos por uma ferramenta mais clara, visual e agradável de usar no dia a dia.
 
-Em vez de funcionar apenas como um registro de transações, o projeto foi pensado como uma dashboard de planejamento financeiro. A ideia é ajudar a entender quanto da renda já está comprometida, o que ainda precisa ser pago, como o mês tende a terminar e de que forma os investimentos podem evoluir ao longo do tempo.
+Em vez de funcionar apenas como um registro de transações, o projeto foi pensado como uma dashboard de planejamento financeiro. A ideia é ajudar a entender quanto da renda já está comprometida, o que ainda precisa ser pago, como o mês tende a terminar e o que cada compra no cartão muda no saldo dos próximos meses.
 
 Tudo funciona localmente no navegador. Não há conta, backend, analytics ou envio de informações financeiras para serviços externos.
 
 ## O que já é possível fazer
 
-- Planejar ganhos e gastos fixos ou pontuais
-- Editar, excluir e categorizar itens financeiros
-- Definir datas de início e término para valores recorrentes
-- Marcar lançamentos como pendentes, confirmados ou ignorados
-- Comparar valores previstos e realizados em diferentes períodos
-- Visualizar fluxo de caixa, distribuição por categoria e evolução mensal
-- Receber análises rápidas sobre renda comprometida e pagamentos futuros
-- Cadastrar reservas, caixinhas e outros investimentos
-- Simular investimentos com saldo inicial, rentabilidade anual e aportes mensais
-- Vincular aportes a gastos do planejamento financeiro
+- Planejar ganhos e gastos fixos ou pontuais, com datas de início e término
+- Parcelar compras (cada parcela cai no seu mês) e mudar o valor de um item a partir de um mês sem alterar o passado
+- Confirmar lançamentos com o valor e a data reais, ignorar ou voltar para pendente
+- Marcar vários lançamentos e ver a soma, como quando se soma um extrato
+- Filtrar por busca, tipo, categoria, situação e cartão
+- Ver o mês dia a dia, o gasto por categoria e a evolução dos meses seguintes
+- Cadastrar cartões (dia do pagamento e limite), vincular gastos a eles e abrir a fatura do mês
+- Simular uma compra ("Posso gastar?") e ver o efeito no saldo dos próximos meses antes de registrar
+- Partir de um saldo inicial que acumula de mês em mês
 - Exportar e importar um backup completo em JSON
 
 ## Privacidade como decisão de arquitetura
@@ -43,7 +42,7 @@ Alguns cuidados que guiaram o desenvolvimento:
 - entradas do usuário e backups são validados com Zod;
 - cálculos financeiros e projeções foram isolados em funções puras e testáveis;
 - alterações destrutivas exigem confirmação;
-- dados de versões anteriores são migrados sem apagar o histórico do usuário;
+- dados de versões anteriores são migrados, e o texto original fica guardado no navegador antes de ser convertido;
 - interface, regras de negócio, persistência e tipos ficam em camadas separadas.
 
 ## Tecnologias
@@ -51,7 +50,7 @@ Alguns cuidados que guiaram o desenvolvimento:
 - React
 - TypeScript
 - Vite
-- Tailwind CSS
+- CSS puro
 - Zod
 - Vitest
 - Testing Library
@@ -73,7 +72,7 @@ npm run lint
 npm run build
 ```
 
-Os testes cobrem cálculos financeiros, recorrências, persistência, migração de dados, backups e projeções de investimentos.
+Os testes cobrem cálculos financeiros, recorrências, parcelas, faturas de cartão, simulação de compras, persistência, migração de dados, backups e as telas principais.
 
 ## Estrutura
 
@@ -81,7 +80,7 @@ Os testes cobrem cálculos financeiros, recorrências, persistência, migração
 src/
   components/   # Componentes de interface organizados por domínio
   hooks/        # Estado e coordenação das regras da aplicação
-  pages/        # Dashboard, planejamento, lançamentos e investimentos
+  pages/        # Dashboard, planejamento, dados, ajuda e boas-vindas
   schemas/      # Validação dos dados com Zod
   services/     # Persistência, migração e backups
   tests/        # Testes unitários e de componentes

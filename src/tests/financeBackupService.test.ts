@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest'
+import { vi } from 'vitest'
+import { getLastBackupAt } from '../services/financeStorage'
 import type { FinanceData } from '../types/finance'
-import { parseFinanceBackup, serializeFinanceBackup } from '../services/financeBackupService'
+import { downloadFinanceBackup, parseFinanceBackup, serializeFinanceBackup } from '../services/financeBackupService'
 
 const emptyData: FinanceData = {
-  version: 3,
+  version: 5,
   welcomeCompleted: true,
   items: [],
   occurrenceRecords: [],
-  investments: [],
+  cards: [],
 }
 
 describe('finance backup service', () => {
@@ -49,8 +51,8 @@ describe('finance backup service', () => {
         }],
       },
     }))
-    expect(migrated.version).toBe(3)
-    expect(migrated.occurrenceRecords[0]).toEqual({ key: 'item:2026-01-01', status: 'completed' })
+    expect(migrated.version).toBe(5)
+    expect(migrated.occurrenceRecords[0]).toEqual({ key: 'item:2026-01', status: 'completed' })
   })
 
   it('migrates a version 1 transaction backup', () => {
@@ -64,6 +66,14 @@ describe('finance backup service', () => {
       }],
     }))
     expect(migrated.items[0]).toMatchObject({ id: 'old', dueDate: '2026-01-05' })
-    expect(migrated.occurrenceRecords[0].status).toBe('completed')
+    expect(migrated.occurrenceRecords[0]).toMatchObject({ key: 'old:2026-01', status: 'completed' })
+  })
+
+  it('marks the backup as done when downloading', () => {
+    URL.createObjectURL = vi.fn(() => 'blob:x')
+    URL.revokeObjectURL = vi.fn()
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined)
+    downloadFinanceBackup(emptyData)
+    expect(getLastBackupAt()).not.toBeNull()
   })
 })

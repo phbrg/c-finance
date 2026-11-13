@@ -37,8 +37,8 @@ export function ConfirmDialog({
         <h2 id="dialog-title" className="dialog-title">{title}</h2>
         <p id="dialog-description" className="dialog-description">{description}</p>
         <div className="dialog-actions">
-          <button type="button" className="button-secondary" onClick={onCancel} autoFocus>Cancelar</button>
-          <button type="button" className="button-danger" onClick={onConfirm}>{confirmLabel}</button>
+          <button type="button" className="btn" onClick={onCancel} autoFocus>Cancelar</button>
+          <button type="button" className="btn danger" onClick={onConfirm}>{confirmLabel}</button>
         </div>
       </div>
     </div>

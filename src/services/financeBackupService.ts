@@ -1,7 +1,7 @@
 import { parseFinanceData } from '../schemas/financeSchema'
 import { legacyBackupSchema } from '../schemas/legacyTransactionSchema'
 import type { FinanceData } from '../types/finance'
-import { migrateTransactions } from './financeStorage'
+import { markBackupDone, migrateTransactions } from './financeStorage'
 
 export const MAX_BACKUP_SIZE = 10 * 1024 * 1024
 
@@ -43,4 +43,5 @@ export function downloadFinanceBackup(data: FinanceData): void {
   link.download = `c-finance-${new Date().toISOString().slice(0, 10)}.json`
   link.click()
   URL.revokeObjectURL(url)
+  markBackupDone()
 }
