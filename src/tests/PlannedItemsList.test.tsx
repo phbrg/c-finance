@@ -22,11 +22,11 @@ const pastOneTime: FinancialItem = { ...item(1), id: 'old', title: 'Conserto', k
 
 describe('planned items list', () => {
   it('shows items progressively instead of rendering the full history', () => {
-    render(<PlannedItemsList items={Array.from({ length: 10 }, (_, index) => item(index + 1))} {...noop} />)
-    expect(screen.getByText('Item 8')).toBeInTheDocument()
-    expect(screen.queryByText('Item 9')).not.toBeInTheDocument()
+    render(<PlannedItemsList items={Array.from({ length: 20 }, (_, index) => item(index + 1))} {...noop} />)
+    expect(screen.getByText('Item 18')).toBeInTheDocument()
+    expect(screen.queryByText('Item 19')).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Mostrar mais/ }))
-    expect(screen.getByText('Item 10')).toBeInTheDocument()
+    expect(screen.getByText('Item 20')).toBeInTheDocument()
   })
 
   it('filters items by search', () => {

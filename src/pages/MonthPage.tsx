@@ -138,9 +138,9 @@ export function MonthPage({ data, month, onMonthChange, onStatusChange, onAddIte
     <div className="page month-page">
       <header className="page-header">
         <nav className="month-nav" aria-label="Mês">
-          <button type="button" className="btn ghost" onClick={() => changeMonth(addMonth(month, -1))} aria-label="Mês anterior">‹</button>
+          <button type="button" className="btn ghost" onClick={() => changeMonth(addMonth(month, -1))} aria-label="Mês anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg></button>
           <h1><strong>{monthLabel(month)}</strong></h1>
-          <button type="button" className="btn ghost" onClick={() => changeMonth(addMonth(month, 1))} aria-label="Próximo mês">›</button>
+          <button type="button" className="btn ghost" onClick={() => changeMonth(addMonth(month, 1))} aria-label="Próximo mês"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
           {month !== currentMonth() && <button type="button" className="btn small" onClick={() => changeMonth(currentMonth())}>Mês atual</button>}
         </nav>
       </header>

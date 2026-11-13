@@ -1,7 +1,9 @@
-.dialog-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.72); padding: 16px; backdrop-filter: blur(3px); }
-.dialog-panel { width: 100%; max-width: 430px; border: 1px solid #374355; border-radius: 15px; background: #151b24; padding: 24px; box-shadow: 0 24px 80px rgba(0,0,0,.5); }
-.dialog-icon { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; margin-bottom: 20px; border-radius: 50%; background: #4c1524; color: #fb7185; font-size: 20px; }
-.dialog-title { margin: 0; color: #f1f5f9; font-size: 20px; font-weight: 700; }
-.dialog-description { margin: 8px 0 0; color: #94a3b8; font-size: 14px; line-height: 1.5; }
-.dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.dialog-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(5,7,10,.72); padding: 16px; backdrop-filter: blur(4px); }
+.dialog-panel { width: 100%; max-width: 420px; border: 1px solid var(--border-strong); border-radius: 20px; background: linear-gradient(180deg, var(--surface-raised), var(--surface)); padding: 28px 24px 24px; text-align: center; box-shadow: 0 24px 80px rgba(0,0,0,.55); }
+.dialog-icon { display: flex; width: 48px; height: 48px; align-items: center; justify-content: center; margin: 0 auto 16px; border-radius: 50%; background: rgba(240,113,120,.14); box-shadow: 0 0 0 6px rgba(240,113,120,.06); color: var(--expense); font-size: 22px; font-weight: 700; }
+.dialog-title { margin: 0; color: var(--text); font-size: var(--fs-xl); font-weight: 620; letter-spacing: -.02em; }
+.dialog-description { margin: 8px 0 0; color: var(--muted); font-size: var(--fs-md); line-height: 1.5; }
+.dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
+.dialog-actions .btn.danger { border-color: #b4414f; background: #7a2a36; color: #fff; }
+.dialog-actions .btn.danger:hover { background: #93313f; }
 .backup-error { margin: 8px 0 0; color: #fda4af; font-size: 12px; }

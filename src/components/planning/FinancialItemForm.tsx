@@ -99,17 +99,20 @@ export function FinancialItemForm({
   return (
     <form className="pf-form" onSubmit={submit} noValidate>
       <div className="pf-head">
-        <h2 id="financial-item-dialog-title">{editingItem ? editingItem.title : 'Novo item'}</h2>
-        {onCancel && <button type="button" className="btn small ghost" aria-label="Fechar formulário" onClick={onCancel}>Fechar</button>}
+        <div>
+          <h2 id="financial-item-dialog-title">{editingItem ? editingItem.title : 'Novo item'}</h2>
+          <p className="muted">{editingItem ? 'Edite os dados deste item.' : 'Planeje um ganho ou gasto.'}</p>
+        </div>
+        {onCancel && <button type="button" className="pf-close" aria-label="Fechar formulário" onClick={onCancel}><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none" /></svg></button>}
       </div>
 
-      <div className="chip-row" role="group" aria-label="Tipo">
-        <button type="button" className="chip" aria-pressed={form.type === 'income'} onClick={() => setForm({ ...form, type: 'income', installments: '1', cardId: '' })}>Ganho</button>
-        <button type="button" className="chip" aria-pressed={form.type === 'expense'} onClick={() => setForm({ ...form, type: 'expense' })}>Gasto</button>
+      <div className="pf-seg" role="group" aria-label="Tipo">
+        <button type="button" className="pf-seg-btn is-income" aria-pressed={form.type === 'income'} onClick={() => setForm({ ...form, type: 'income', installments: '1', cardId: '' })}>Ganho</button>
+        <button type="button" className="pf-seg-btn is-expense" aria-pressed={form.type === 'expense'} onClick={() => setForm({ ...form, type: 'expense' })}>Gasto</button>
       </div>
-      <div className="chip-row" role="group" aria-label="Frequência">
-        <button type="button" className="chip" aria-pressed={form.kind === 'recurring'} onClick={() => setForm({ ...form, kind: 'recurring' })}>Todo mês</button>
-        <button type="button" className="chip" aria-pressed={form.kind === 'one-time'} onClick={() => setForm({ ...form, kind: 'one-time' })}>Uma vez</button>
+      <div className="pf-seg" role="group" aria-label="Frequência">
+        <button type="button" className="pf-seg-btn" aria-pressed={form.kind === 'recurring'} onClick={() => setForm({ ...form, kind: 'recurring' })}>Todo mês</button>
+        <button type="button" className="pf-seg-btn" aria-pressed={form.kind === 'one-time'} onClick={() => setForm({ ...form, kind: 'one-time' })}>Uma vez</button>
       </div>
 
       <div className="pf-grid">

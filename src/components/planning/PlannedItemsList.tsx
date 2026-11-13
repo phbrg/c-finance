@@ -18,7 +18,7 @@ interface PlannedItemsListProps {
   onDelete: (id: string) => void
 }
 
-const PAGE_SIZE = 8
+const PAGE_SIZE = 18
 
 export function PlannedItemsList({ items, records = [], cards = [], month = today().slice(0, 7), onCreate, onEdit, onDelete }: PlannedItemsListProps) {
   const [pendingDelete, setPendingDelete] = useState<FinancialItem | null>(null)
@@ -34,7 +34,17 @@ export function PlannedItemsList({ items, records = [], cards = [], month = toda
     () => filterPlannedItems(items, { query, scope, type, kind }, referenceDate, records),
     [items, query, scope, type, kind, referenceDate, records],
   )
-  const visibleItems = filteredItems.slice(0, visibleCount)
+  // Incomes first, then expenses; the sort is stable so each group keeps its own order.
+  const orderedItems = [...filteredItems].sort((a, b) => Number(b.type === 'income') - Number(a.type === 'income'))
+  const visibleItems = orderedItems.slice(0, visibleCount)
+  const groups = (['income', 'expense'] as const)
+    .map((groupType) => ({
+      type: groupType,
+      label: groupType === 'income' ? 'Ganhos' : 'Gastos',
+      total: filteredItems.filter((item) => item.type === groupType).length,
+      items: visibleItems.filter((item) => item.type === groupType),
+    }))
+    .filter((group) => group.items.length > 0)
   const remainingCount = filteredItems.length - visibleItems.length
   const hasSecondaryFilters = Boolean(query || type !== 'all' || kind !== 'all')
 
@@ -75,29 +85,42 @@ export function PlannedItemsList({ items, records = [], cards = [], month = toda
           {filteredItems.length === 0 ? (
             <div className="empty"><strong>Nenhum item encontrado.</strong><span>Mude a busca ou os filtros.</span></div>
           ) : (
-            <ul className="pl-list">
-              {visibleItems.map((item) => {
+            groups.map((group) => (
+            <section key={group.type} className="pl-group" aria-label={group.label}>
+              <h3 className={`pl-group-head ${group.type === 'income' ? 'is-income' : 'is-expense'}`}>{group.label} <small>{group.total}</small></h3>
+              <ul className="pl-list">
+              {group.items.map((item) => {
                 const parts = item.installments && item.installments > 1 ? splitInstallments(item.amount, item.installments) : undefined
                 return (
-                  <li key={item.id} className="pl-row">
-                    <div className="pl-main">
-                      <strong>{item.title}</strong>
-                      <span className="badge">{item.category}</span>
-                      {item.cardId && <span className="badge">{cards.find((card) => card.id === item.cardId)?.name ?? 'Cartão'}</span>}
-                      <small className="muted">{describeWhen(item, parts?.length, referenceDate)}</small>
+                  <li key={item.id} className={`pl-card ${item.type === 'income' ? 'is-income' : 'is-expense'}${scope === 'ended' ? ' is-ended' : ''}`}>
+                    <div className="pl-card-top">
+                      <span className="pl-icon" aria-hidden="true">{item.type === 'income' ? '↑' : '↓'}</span>
+                      <div className="pl-main">
+                        <strong>{item.title}</strong>
+                        <small className="muted">{describeWhen(item, parts?.length, referenceDate)}</small>
+                      </div>
+                      <div className="pl-amount">
+                        <strong className={`money ${item.type === 'income' ? 'is-income' : 'is-expense'}`}>{item.type === 'income' ? '+' : '−'} {formatCurrency(item.kind === 'recurring' ? amountAt(item, month) : item.amount)}</strong>
+                        {parts && <small className="muted">{parts.length}x de {formatCurrency(parts[0])}</small>}
+                      </div>
                     </div>
-                    <div className="pl-amount">
-                      <strong className={`money ${item.type === 'income' ? 'is-income' : 'is-expense'}`}>{item.type === 'income' ? '+' : '−'} {formatCurrency(item.kind === 'recurring' ? amountAt(item, month) : item.amount)}</strong>
-                      {parts && <small className="muted">{parts.length}x de {formatCurrency(parts[0])}</small>}
-                    </div>
-                    <div className="pl-actions">
-                      <button type="button" className="btn small" aria-label={`Editar ${item.title}`} onClick={() => onEdit(item)}>Editar</button>
-                      <button type="button" className="btn small danger" aria-label={`Excluir ${item.title}`} onClick={() => setPendingDelete(item)}>Excluir</button>
+                    <div className="pl-card-foot">
+                      <div className="pl-tags">
+                        <span className="badge">{item.category}</span>
+                        <span className="badge">{item.kind === 'recurring' ? 'Todo mês' : 'Uma vez'}</span>
+                        {item.cardId && <span className="badge">{cards.find((card) => card.id === item.cardId)?.name ?? 'Cartão'}</span>}
+                      </div>
+                      <div className="pl-actions">
+                        <button type="button" className="btn small" aria-label={`Editar ${item.title}`} onClick={() => onEdit(item)}>Editar</button>
+                        <button type="button" className="btn small danger" aria-label={`Excluir ${item.title}`} onClick={() => setPendingDelete(item)}>Excluir</button>
+                      </div>
                     </div>
                   </li>
                 )
               })}
-            </ul>
+              </ul>
+            </section>
+            ))
           )}
 
           {remainingCount > 0 && <button type="button" className="btn pl-more" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>Mostrar mais ({remainingCount})</button>}

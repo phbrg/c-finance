@@ -79,7 +79,7 @@ describe('DataPage', () => {
 
     window.localStorage.setItem('c-finance:last-backup', new Date().toISOString())
     rerender(<DataPage key="fresh" data={{ ...data, items, cards: [card], openingBalance: { amount: 150050, month: '2026-03' } }} onImport={vi.fn()} onSetOpeningBalance={vi.fn()} {...cardProps} />)
-    expect(stat('Lançamentos')).toHaveTextContent(/^Lançamentos21 entrada e 1 saída$/)
+    expect(stat('Lançamentos')).toHaveTextContent(/^.Lançamentos21 entrada e 1 saída$/)
     expect(stat('Cartões')).toHaveTextContent('Nubank')
     expect(stat('Último backup')).toHaveTextContent('hoje')
     expect(stat('Último backup')).not.toHaveClass('is-warning')
